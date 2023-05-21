@@ -15,7 +15,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
 
-    <spring-boot.version>3.0.0</spring-boot.version>
+    <spring-boot.version>3.1.0</spring-boot.version>
 
     <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
 
