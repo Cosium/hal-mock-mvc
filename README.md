@@ -27,10 +27,10 @@ MockMvc wrapper allowing to easily test [Spring HATEOAS](https://github.com/spri
      @Test
      void test() {
        halMockMvc
-      .follow("current-user")
-      .get()
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$.alias").value("jdoe"));
+          .follow("current-user")
+          .get()
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.alias").value("jdoe"));
      }
    }
    ```
