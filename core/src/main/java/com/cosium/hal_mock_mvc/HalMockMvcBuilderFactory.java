@@ -7,7 +7,7 @@ import org.springframework.test.web.servlet.MockMvc;
 /**
  * @author Réda Housni Alaoui
  */
-public class HalMockMvcBuilderFactory {
+public class HalMockMvcBuilderFactory implements HalMockMvcBuilders {
 
   private final MockMvc mockMvc;
 
@@ -15,6 +15,7 @@ public class HalMockMvcBuilderFactory {
     this.mockMvc = requireNonNull(mockMvc);
   }
 
+  @Override
   public HalMockMvc.Builder create() {
     return HalMockMvc.builder(mockMvc);
   }

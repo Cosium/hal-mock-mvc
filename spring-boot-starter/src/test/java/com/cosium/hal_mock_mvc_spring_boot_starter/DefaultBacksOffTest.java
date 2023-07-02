@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.cosium.hal_mock_mvc.HalMockMvc;
 import com.cosium.hal_mock_mvc.HalMockMvcBuilderFactory;
+import com.cosium.hal_mock_mvc.HalMockMvcBuilders;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -27,10 +28,10 @@ class DefaultBacksOffTest {
         .withUserConfiguration(UserConfiguration.class)
         .run(
             context -> {
-              assertThat(context).hasSingleBean(HalMockMvcBuilderFactory.class);
+              assertThat(context).hasSingleBean(HalMockMvcBuilders.class);
               assertThat(context)
-                  .getBean("myBuilderFactory")
-                  .isSameAs(context.getBean(HalMockMvcBuilderFactory.class));
+                  .getBean("myBuilders")
+                  .isSameAs(context.getBean(HalMockMvcBuilders.class));
             });
   }
 
@@ -51,7 +52,7 @@ class DefaultBacksOffTest {
   static class UserConfiguration {
 
     @Bean
-    HalMockMvcBuilderFactory myBuilderFactory() {
+    HalMockMvcBuilders myBuilders() {
       return new HalMockMvcBuilderFactory(MockMvcBuilders.standaloneSetup().build());
     }
 

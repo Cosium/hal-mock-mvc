@@ -2,6 +2,7 @@ package com.cosium.hal_mock_mvc_spring_boot_starter;
 
 import com.cosium.hal_mock_mvc.HalMockMvc;
 import com.cosium.hal_mock_mvc.HalMockMvcBuilderFactory;
+import com.cosium.hal_mock_mvc.HalMockMvcBuilders;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -24,16 +25,18 @@ public class HalMockMvcAutoConfiguration {
 
   @ConditionalOnMissingBean
   @Bean
-  public HalMockMvcBuilderFactory halMockMvcBuilderFactory(MockMvc mockMvc) {
-    return new HalMockMvcBuilderFactory(mockMvc);
+  public HalMockMvcBuilders halMockMvcBuilderFactory(
+      MockMvc mockMvc, @Nullable List<HalMockMvcBuilderCustomizer> customizers) {
+    return new CustomizableHalMockMvcBuilders(new HalMockMvcBuilderFactory(mockMvc), customizers);
   }
 
   @ConditionalOnMissingBean
   @Bean
   public HalMockMvc defaultHalMockMvc(
-      MockMvc mockMvc, @Nullable List<DefaultHalMockMvcBuilderCustomizer> nullableCustomizers) {
+      HalMockMvcBuilders halMockMvcBuilders,
+      @Nullable List<DefaultHalMockMvcBuilderCustomizer> nullableCustomizers) {
 
-    HalMockMvc.Builder builder = HalMockMvc.builder(mockMvc);
+    HalMockMvc.Builder builder = halMockMvcBuilders.create();
 
     Optional.ofNullable(nullableCustomizers)
         .orElseGet(List::of)
