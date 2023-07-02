@@ -1,7 +1,6 @@
 package com.cosium.hal_mock_mvc_spring_boot_starter;
 
 import com.cosium.hal_mock_mvc.HalMockMvc;
-import com.cosium.hal_mock_mvc.HalMockMvcBuilderFactory;
 import com.cosium.hal_mock_mvc.HalMockMvcBuilders;
 import java.util.List;
 import java.util.Optional;
@@ -25,9 +24,16 @@ public class HalMockMvcAutoConfiguration {
 
   @ConditionalOnMissingBean
   @Bean
-  public HalMockMvcBuilders halMockMvcBuilderFactory(
-      MockMvc mockMvc, @Nullable List<HalMockMvcBuilderCustomizer> customizers) {
-    return new CustomizableHalMockMvcBuilders(new HalMockMvcBuilderFactory(mockMvc), customizers);
+  public HalMockMvcBuildersFactory halMockMvcBuildersFactory(
+      @Nullable List<HalMockMvcBuilderCustomizer> customizers) {
+    return new HalMockMvcBuildersFactory(customizers);
+  }
+
+  @ConditionalOnMissingBean
+  @Bean
+  public HalMockMvcBuilders halMockMvcBuilders(
+      HalMockMvcBuildersFactory halMockMvcBuildersFactory, MockMvc mockMvc) {
+    return halMockMvcBuildersFactory.build(mockMvc);
   }
 
   @ConditionalOnMissingBean
