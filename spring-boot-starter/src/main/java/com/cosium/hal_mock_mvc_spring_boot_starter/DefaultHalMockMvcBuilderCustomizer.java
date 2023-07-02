@@ -4,8 +4,8 @@ import com.cosium.hal_mock_mvc.HalMockMvc;
 
 /**
  * A customizer for a {@link com.cosium.hal_mock_mvc.HalMockMvc.Builder} . Any {@link
- * DefaultHalMockMvcBuilderCustomizer} beans found in the application context will be called to
- * customize the auto-configured {@link com.cosium.hal_mock_mvc.HalMockMvc.Builder}.
+ * DefaultHalMockMvcBuilderCustomizer} beans found in the application context will be used to
+ * customize the autoconfigured {@link com.cosium.hal_mock_mvc.HalMockMvc.Builder}.
  *
  * @author Réda Housni Alaoui
  * @see HalMockMvcAutoConfiguration
