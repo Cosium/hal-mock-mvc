@@ -1,7 +1,6 @@
 package com.cosium.hal_mock_mvc;
 
 import static java.util.Objects.requireNonNull;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.net.URI;
 import org.springframework.test.web.servlet.ResultActions;
@@ -11,7 +10,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 /**
  * @author Réda Housni Alaoui
  */
-public class Template {
+public class Template implements SubmittableTemplate {
 
   private final RequestExecutor requestExecutor;
   private final String key;
@@ -33,10 +32,7 @@ public class Template {
     target = URI.create(representation.target().orElse(baseUri));
   }
 
-  /**
-   * Submits the template by expecting a 201 Created response then begins a new traversal starting
-   * at the returned Location header.
-   */
+  @Override
   public HalMockMvc createAndShift() throws Exception {
     return createAndShift(null);
   }
@@ -48,19 +44,10 @@ public class Template {
    * @param content The content to submit
    */
   public HalMockMvc createAndShift(String content) throws Exception {
-    String location =
-        submit(content)
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getHeader("Location");
-
-    requireNonNull(location, "No header 'Location' found");
-
-    return requestExecutor.shiftTo(location);
+    return requestExecutor.assertCreatedAndShift(submit(content));
   }
 
-  /** Submits the template */
+  @Override
   public ResultActions submit() throws Exception {
     return submit(null);
   }
