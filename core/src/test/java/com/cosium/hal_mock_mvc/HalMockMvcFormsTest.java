@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +30,7 @@ import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilderFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -70,7 +72,7 @@ class HalMockMvcFormsTest {
         .submit(json)
         .andExpect(status().isCreated());
 
-    assertThat(myController.resourceByName).containsKey("john");
+    assertThat(myController.personByName).containsKey("john");
   }
 
   @Test
@@ -87,7 +89,7 @@ class HalMockMvcFormsTest {
         .submit()
         .andExpect(status().isNoContent());
 
-    assertThat(myController.resourceByName).isEmpty();
+    assertThat(myController.personByName).isEmpty();
   }
 
   @Test
@@ -106,12 +108,14 @@ class HalMockMvcFormsTest {
         .submit(command)
         .andExpect(status().isNoContent());
 
-    assertThat(myController.resourceByName.get("john").city).isEqualTo("paris");
+    assertThat(myController.personByName.get("john").city).isEqualTo("paris");
   }
 
   @Test
   @DisplayName("PUT multipart")
   void test4() throws Exception {
+    myController.fileById.put("foo", new MockMultipartFile("file", new byte[0]));
+
     HalMockMvc.builder(mockMvc)
         .baseUri(linkTo(methodOn(MyController.class).list()).toUri())
         .build()
@@ -137,7 +141,7 @@ class HalMockMvcFormsTest {
             .templates()
             .list();
 
-    assertThat(templates).hasSize(2).map(Template::key).contains("default", "create");
+    assertThat(templates).hasSize(3).map(Template::key).contains("default", "create", "addFile");
     assertThat(templates)
         .filteredOn(template -> "create".equals(template.key()))
         .map(Template::representation)
@@ -166,11 +170,28 @@ class HalMockMvcFormsTest {
         .andExpect(jsonPath("$.name").value("john"));
   }
 
+  @Test
+  @DisplayName("POST multipart then GET created resource")
+  void test7() throws Exception {
+    HalMockMvc.builder(mockMvc)
+        .baseUri(linkTo(methodOn(MyController.class).list()).toUri())
+        .build()
+        .follow()
+        .templates()
+        .byKey("addFile")
+        .multipart()
+        .file("file", new byte[] {0})
+        .createAndShift()
+        .follow()
+        .get()
+        .andExpect(status().isOk());
+  }
+
   @Controller
   @RequestMapping("/HalMockMvcFormsTest")
   public static class MyController {
 
-    private final Map<String, HalFormsResource> resourceByName = new HashMap<>();
+    private final Map<String, PersonResource> personByName = new HashMap<>();
     private final Map<String, MultipartFile> fileById = new HashMap<>();
     private final WebMvcLinkBuilderFactory linkBuilders;
 
@@ -179,12 +200,12 @@ class HalMockMvcFormsTest {
     }
 
     private void reset() {
-      resourceByName.clear();
+      personByName.clear();
       fileById.clear();
     }
 
     public void addResource(String name) {
-      resourceByName.put(name, new HalFormsResource(name));
+      personByName.put(name, new PersonResource(name));
     }
 
     @GetMapping
@@ -193,11 +214,12 @@ class HalMockMvcFormsTest {
           linkTo(methodOn(MyController.class).list())
               .withSelfRel()
               .andAffordance(VoidAffordance.create())
-              .andAffordance(afford(methodOn(MyController.class).create(null)));
+              .andAffordance(afford(methodOn(MyController.class).create(null)))
+              .andAffordance(afford(methodOn(MyController.class).addFile(null)));
 
-      List<EntityModel<HalFormsResource>> resources =
-          this.resourceByName.values().stream()
-              .map(HalFormsResource::toEntityModel)
+      List<EntityModel<PersonResource>> resources =
+          this.personByName.values().stream()
+              .map(PersonResource::toEntityModel)
               .collect(Collectors.toList());
       return ResponseEntity.ok(
           CollectionModel.of(
@@ -206,7 +228,7 @@ class HalMockMvcFormsTest {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody CreateCommand command) {
-      resourceByName.put(command.name, new HalFormsResource(command.name));
+      personByName.put(command.name, new PersonResource(command.name));
 
       return ResponseEntity.created(
               linkTo(methodOn(MyController.class).findByName(command.name)).toUri())
@@ -216,13 +238,13 @@ class HalMockMvcFormsTest {
     @GetMapping("/{name}")
     public ResponseEntity<?> findByName(@PathVariable("name") String name) {
       return ResponseEntity.of(
-          Optional.ofNullable(resourceByName.get(name)).map(HalFormsResource::toEntityModel));
+          Optional.ofNullable(personByName.get(name)).map(PersonResource::toEntityModel));
     }
 
     @PutMapping("/{name}/city")
     public ResponseEntity<?> changeCity(
         @PathVariable("name") String name, @RequestBody ChangeCityCommand command) {
-      HalFormsResource resource = resourceByName.get(name);
+      PersonResource resource = personByName.get(name);
       if (resource == null) {
         return ResponseEntity.notFound().build();
       }
@@ -232,12 +254,16 @@ class HalMockMvcFormsTest {
 
     @DeleteMapping("/{name}")
     public ResponseEntity<?> deleteByName(@PathVariable("name") String name) {
-      resourceByName.remove(name);
+      personByName.remove(name);
       return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/files/{id}")
-    public ResponseEntity<?> getFile(@RequestParam("id") String id) {
+    public ResponseEntity<?> getFile(@PathVariable("id") String id) {
+      if (!fileById.containsKey(id)) {
+        return ResponseEntity.notFound().build();
+      }
+
       return ResponseEntity.ok(
           new RepresentationModel<>(
               linkBuilders
@@ -253,13 +279,24 @@ class HalMockMvcFormsTest {
       fileById.put(id, file);
       return ResponseEntity.noContent().build();
     }
+
+    @PostMapping(value = "/files", consumes = "multipart/form-data")
+    public ResponseEntity<?> addFile(@RequestParam("file") MultipartFile file) {
+      String id = UUID.randomUUID().toString();
+      fileById.put(id, file);
+      return ResponseEntity.created(
+              linkBuilders.linkTo(methodOn(MyController.class).getFile(id)).toUri())
+          .build();
+    }
   }
 
-  private static class HalFormsResource {
+  private record FileRepresentation(@JsonProperty String id) {}
+
+  private static class PersonResource {
     private final String name;
     private String city;
 
-    HalFormsResource(String name) {
+    PersonResource(String name) {
       this.name = name;
     }
 
@@ -273,7 +310,7 @@ class HalMockMvcFormsTest {
       return city;
     }
 
-    public EntityModel<HalFormsResource> toEntityModel() {
+    public EntityModel<PersonResource> toEntityModel() {
       Link selfRel =
           linkTo(methodOn(MyController.class).findByName(name))
               .withSelfRel()

@@ -1,6 +1,7 @@
 package com.cosium.hal_mock_mvc;
 
 import static java.util.Objects.requireNonNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 import org.springframework.hateoas.MediaTypes;
@@ -31,7 +32,20 @@ class RequestExecutor {
     return mockMvc.perform(requestBuilder.accept(MediaTypes.HAL_FORMS_JSON).headers(httpHeaders));
   }
 
-  public HalMockMvc shiftTo(String location) {
+  public HalMockMvc assertCreatedAndShift(ResultActions resultActions) throws Exception {
+    String location =
+        resultActions
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getHeader("Location");
+
+    requireNonNull(location, "No header 'Location' found");
+
+    return shiftTo(location);
+  }
+
+  private HalMockMvc shiftTo(String location) {
     return HalMockMvc.builder(mockMvc)
         .baseUri(location)
         .requestPostProcessors(postProcessors)

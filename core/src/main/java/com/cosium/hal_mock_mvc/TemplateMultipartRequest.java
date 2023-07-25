@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 /**
  * @author Réda Housni Alaoui
  */
-public class TemplateMultipartRequest {
+public class TemplateMultipartRequest implements SubmittableTemplate {
 
   private final RequestExecutor requestExecutor;
   private final MockMultipartHttpServletRequestBuilder requestBuilder;
@@ -42,7 +42,13 @@ public class TemplateMultipartRequest {
     return this;
   }
 
+  @Override
   public ResultActions submit() throws Exception {
     return requestExecutor.execute(requestBuilder);
+  }
+
+  @Override
+  public HalMockMvc createAndShift() throws Exception {
+    return requestExecutor.assertCreatedAndShift(submit());
   }
 }
