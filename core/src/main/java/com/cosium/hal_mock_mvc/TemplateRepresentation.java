@@ -32,7 +32,7 @@ public class TemplateRepresentation {
       @JsonProperty("properties") List<TemplatePropertyRepresentation> properties,
       @JsonProperty("target") String target) {
     this.title = title;
-    this.method = requireNonNull(method);
+    this.method = requireNonNull(method, "Attribute 'method' is missing");
     this.contentType = Optional.ofNullable(contentType).orElse(MediaType.APPLICATION_JSON_VALUE);
     Map<String, TemplatePropertyRepresentation> mutablePropertyByName =
         Optional.ofNullable(properties).orElseGet(Collections::emptyList).stream()

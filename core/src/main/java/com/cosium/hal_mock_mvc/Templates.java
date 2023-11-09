@@ -48,6 +48,7 @@ public class Templates {
     body =
         new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .registerModule(new JacksonModule())
             .readValue(jsonBody, HalFormsBody.class);
   }
 
