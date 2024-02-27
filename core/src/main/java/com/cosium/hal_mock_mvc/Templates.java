@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.ResultActions;
 public class Templates {
 
   private final RequestExecutor requestExecutor;
+  private final ObjectMapper objectMapper;
   private final HalFormsBody body;
 
   Templates(RequestExecutor requestExecutor, ResultActions resultActions) throws Exception {
@@ -45,16 +46,18 @@ public class Templates {
               + jsonBody
               + "'");
     }
-    body =
+    objectMapper =
         new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .registerModule(new JacksonModule())
-            .readValue(jsonBody, HalFormsBody.class);
+            .registerModule(new JacksonModule());
+    body = objectMapper.readValue(jsonBody, HalFormsBody.class);
   }
 
   public Optional<Template> byOptionalKey(String key) {
     return Optional.ofNullable(body.templateByKey.get(key))
-        .map(representation -> new Template(requestExecutor, body.baseUri, key, representation));
+        .map(
+            representation ->
+                new Template(requestExecutor, objectMapper, body.baseUri, key, representation));
   }
 
   public Template byKey(String key) {
@@ -64,7 +67,10 @@ public class Templates {
 
   public Collection<Template> list() {
     return body.templateByKey.entrySet().stream()
-        .map(entry -> new Template(requestExecutor, body.baseUri, entry.getKey(), entry.getValue()))
+        .map(
+            entry ->
+                new Template(
+                    requestExecutor, objectMapper, body.baseUri, entry.getKey(), entry.getValue()))
         .collect(Collectors.toSet());
   }
 

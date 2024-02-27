@@ -27,7 +27,7 @@ public class OptionsRepresentation {
       @JsonProperty("promptField") String promptField,
       @JsonProperty("selectedValues") List<String> selectedValues,
       @JsonProperty("valueField") String valueField) {
-    this.inline = Optional.ofNullable(inline).map(List::copyOf).orElseGet(List::of);
+    this.inline = Optional.ofNullable(inline).map(List::copyOf).orElse(null);
     this.link = link;
     this.maxItems = maxItems;
     this.minItems = Optional.ofNullable(minItems).orElse(0L);
@@ -36,8 +36,8 @@ public class OptionsRepresentation {
     this.valueField = valueField;
   }
 
-  public List<InlineElementRepresentation> inline() {
-    return inline;
+  public Optional<List<InlineElementRepresentation>> inline() {
+    return Optional.ofNullable(inline);
   }
 
   public Optional<OptionsLinkRepresentation> link() {

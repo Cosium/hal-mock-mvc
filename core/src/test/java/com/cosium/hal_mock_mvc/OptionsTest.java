@@ -54,7 +54,7 @@ class OptionsTest {
     assertThat(options.valueField()).isEmpty();
 
     assertThat(options.selectedValues()).containsExactly("FedEx");
-    assertThat(options.inline())
+    assertThat(options.inline().orElseThrow())
         .allMatch(StringInlineElementRepresentation.class::isInstance)
         .map(StringInlineElementRepresentation.class::cast)
         .map(StringInlineElementRepresentation::value)
@@ -83,7 +83,7 @@ class OptionsTest {
     assertThat(options.valueField()).contains("shipCode");
 
     assertThat(options.selectedValues()).containsExactly("FedEx");
-    assertThat(options.inline())
+    assertThat(options.inline().orElseThrow())
         .allMatch(MapInlineElementRepresentation.class::isInstance)
         .map(MapInlineElementRepresentation.class::cast)
         .map(MapInlineElementRepresentation::map)
@@ -115,7 +115,7 @@ class OptionsTest {
     assertThat(options.valueField()).contains("shipCode");
 
     assertThat(options.selectedValues()).containsExactly("FedEx");
-    assertThat(options.inline())
+    assertThat(options.inline().orElseThrow())
         .allMatch(MapInlineElementRepresentation.class::isInstance)
         .map(MapInlineElementRepresentation.class::cast)
         .map(MapInlineElementRepresentation::map)

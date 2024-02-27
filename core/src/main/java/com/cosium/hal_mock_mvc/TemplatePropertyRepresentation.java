@@ -18,6 +18,13 @@ public class TemplatePropertyRepresentation {
   private final String regex;
   private final boolean templated;
   private final OptionsRepresentation options;
+  private final boolean readOnly;
+  private final String type;
+  private final Double max;
+  private final Long maxLength;
+  private final Double min;
+  private final Long minLength;
+  private final Double step;
 
   @JsonCreator
   TemplatePropertyRepresentation(
@@ -27,7 +34,14 @@ public class TemplatePropertyRepresentation {
       @JsonProperty("prompt") String prompt,
       @JsonProperty("regex") String regex,
       @JsonProperty("templated") Boolean templated,
-      @JsonProperty("options") OptionsRepresentation options) {
+      @JsonProperty("options") OptionsRepresentation options,
+      @JsonProperty("readOnly") Boolean readOnly,
+      @JsonProperty("type") String type,
+      @JsonProperty("max") Double max,
+      @JsonProperty("maxLength") Long maxLength,
+      @JsonProperty("min") Double min,
+      @JsonProperty("minLength") Long minLength,
+      @JsonProperty("step") Double step) {
     this.name = requireNonNull(name, "Attribute 'name' is missing");
     this.required = Optional.ofNullable(required).orElse(false);
     this.value = value;
@@ -35,10 +49,25 @@ public class TemplatePropertyRepresentation {
     this.regex = regex;
     this.templated = Optional.ofNullable(templated).orElse(false);
     this.options = options;
+    this.readOnly = Optional.ofNullable(readOnly).orElse(false);
+    this.type = Optional.ofNullable(type).orElse("text");
+    this.max = max;
+    this.maxLength = maxLength;
+    this.min = min;
+    this.minLength = minLength;
+    this.step = step;
   }
 
   public String name() {
     return name;
+  }
+
+  public String type() {
+    return type;
+  }
+
+  public boolean readOnly() {
+    return readOnly;
   }
 
   public boolean required() {
@@ -47,6 +76,26 @@ public class TemplatePropertyRepresentation {
 
   public Optional<String> value() {
     return Optional.ofNullable(value);
+  }
+
+  public Optional<Double> max() {
+    return Optional.ofNullable(max);
+  }
+
+  public Optional<Long> maxLength() {
+    return Optional.ofNullable(maxLength);
+  }
+
+  public Optional<Double> min() {
+    return Optional.ofNullable(min);
+  }
+
+  public Optional<Long> minLength() {
+    return Optional.ofNullable(minLength);
+  }
+
+  public Optional<Double> step() {
+    return Optional.ofNullable(step);
   }
 
   public String prompt() {

@@ -187,6 +187,23 @@ class HalMockMvcFormsTest {
         .andExpect(status().isOk());
   }
 
+  @Test
+  @DisplayName("POST template with form")
+  void test8() throws Exception {
+    HalMockMvc.builder(mockMvc)
+        .baseUri(linkTo(methodOn(MyController.class).list()).toUri())
+        .build()
+        .follow()
+        .templates()
+        .byKey("create")
+        .createForm()
+        .withString("name", "john")
+        .submit()
+        .andExpect(status().isCreated());
+
+    assertThat(myController.personByName).containsKey("john");
+  }
+
   @Controller
   @RequestMapping("/HalMockMvcFormsTest")
   public static class MyController {

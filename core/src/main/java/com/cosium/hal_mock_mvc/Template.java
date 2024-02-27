@@ -2,6 +2,7 @@ package com.cosium.hal_mock_mvc;
 
 import static java.util.Objects.requireNonNull;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -13,6 +14,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 public class Template implements SubmittableTemplate {
 
   private final RequestExecutor requestExecutor;
+  private final ObjectMapper objectMapper;
   private final String key;
   private final TemplateRepresentation representation;
 
@@ -21,15 +23,21 @@ public class Template implements SubmittableTemplate {
 
   Template(
       RequestExecutor requestExecutor,
+      ObjectMapper objectMapper,
       String baseUri,
       String key,
       TemplateRepresentation representation) {
     this.requestExecutor = requireNonNull(requestExecutor);
+    this.objectMapper = requireNonNull(objectMapper);
     this.key = requireNonNull(key);
     this.representation = requireNonNull(representation);
 
     httpMethod = representation.method().toUpperCase();
     target = URI.create(representation.target().orElse(baseUri));
+  }
+
+  public Form createForm() {
+    return new Form(requestExecutor, objectMapper, this);
   }
 
   @Override
