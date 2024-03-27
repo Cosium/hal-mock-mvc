@@ -99,6 +99,15 @@ public class Form {
     return this;
   }
 
+  /**
+   * Submits the form by expecting a 201 Created response then begins a new traversal starting at
+   * the returned Location header.
+   */
+  public HalMockMvc createAndShift() throws Exception {
+    return requestExecutor.assertCreatedAndShift(submit());
+  }
+
+  /** Submits the form */
   public ResultActions submit() throws Exception {
     String contentType = template.representation().contentType();
     if (!MediaType.APPLICATION_JSON_VALUE.equals(contentType)) {
