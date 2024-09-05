@@ -1793,7 +1793,10 @@ class FormTest {
             .byKey("default")
             .createForm();
 
-    assertThatCode(() -> form.withString("foo", "foo", PropertyValidator.EXISTING))
+    assertThatCode(
+            () ->
+                form.withString(
+                    "foo", "foo", PropertyValidationOption.Immediate.DO_NOT_FAIL_IF_NOT_DECLARED))
         .doesNotThrowAnyException();
   }
 
@@ -1831,7 +1834,12 @@ class FormTest {
             .templates()
             .byKey("default")
             .createForm();
-    assertThatCode(() -> form.withString("foo", "foo", PropertyValidator.READ_ONLY))
+    assertThatCode(
+            () ->
+                form.withString(
+                    "foo",
+                    "foo",
+                    PropertyValidationOption.Immediate.DO_NOT_FAIL_IF_DECLARED_READ_ONLY))
         .doesNotThrowAnyException();
   }
 
