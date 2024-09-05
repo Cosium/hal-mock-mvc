@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
@@ -29,73 +30,93 @@ public class Form {
     this.template = requireNonNull(template);
   }
 
-  public Form withString(String propertyName, String value) throws Exception {
+  public Form withString(
+      String propertyName, String value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property =
         new FormProperty<>(
             String.class, propertyName, Optional.ofNullable(value).stream().toList(), false);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
-  public Form withBoolean(String propertyName, Boolean value) throws Exception {
+  public Form withBoolean(
+      String propertyName, Boolean value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property =
         new FormProperty<>(
             Boolean.class, propertyName, Optional.ofNullable(value).stream().toList(), false);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
-  public Form withInteger(String propertyName, Integer value) throws Exception {
+  public Form withInteger(
+      String propertyName, Integer value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property =
         new FormProperty<>(
             Integer.class, propertyName, Optional.ofNullable(value).stream().toList(), false);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
-  public Form withLong(String propertyName, Long value) throws Exception {
+  public Form withLong(
+      String propertyName, Long value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property =
         new FormProperty<>(
             Long.class, propertyName, Optional.ofNullable(value).stream().toList(), false);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
-  public Form withDouble(String propertyName, Double value) throws Exception {
+  public Form withDouble(
+      String propertyName, Double value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property =
         new FormProperty<>(
             Double.class, propertyName, Optional.ofNullable(value).stream().toList(), false);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
-  public Form withStrings(String propertyName, List<String> value) throws Exception {
+  public Form withStrings(
+      String propertyName, List<String> value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property = new FormProperty<>(String.class, propertyName, value, true);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
-  public Form withBooleans(String propertyName, List<Boolean> value) throws Exception {
+  public Form withBooleans(
+      String propertyName, List<Boolean> value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property = new FormProperty<>(Boolean.class, propertyName, value, true);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
-  public Form withIntegers(String propertyName, List<Integer> value) throws Exception {
+  public Form withIntegers(
+      String propertyName, List<Integer> value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property = new FormProperty<>(Integer.class, propertyName, value, true);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
-  public Form withLongs(String propertyName, List<Long> value) throws Exception {
+  public Form withLongs(
+      String propertyName, List<Long> value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property = new FormProperty<>(Long.class, propertyName, value, true);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
-  public Form withDoubles(String propertyName, List<Double> value) throws Exception {
+  public Form withDoubles(
+      String propertyName, List<Double> value, PropertyValidationOption... validationOptions)
+      throws Exception {
     FormProperty<?> property = new FormProperty<>(Double.class, propertyName, value, true);
-    propertyByName.put(property.name(), validate(property));
+    propertyByName.put(property.name(), validate(property, validationOptions));
     return this;
   }
 
@@ -167,9 +188,23 @@ public class Form {
             .formatted(String.join(",", expectedBadRequestReasons), status));
   }
 
-  private ValidatedFormProperty<?> validate(FormProperty<?> property) throws Exception {
-    TemplatePropertyRepresentation representation = requireTemplate(property);
-    if (representation.readOnly()) {
+  private ValidatedFormProperty<?> validate(
+      FormProperty<?> property, PropertyValidationOption... validationOptions) throws Exception {
+    Set<PropertyValidationOption> validationOptionSet =
+        Optional.ofNullable(validationOptions).map(Set::of).orElse(Set.of());
+    TemplatePropertyRepresentation representation =
+        template.representation().propertyByName().get(property.name());
+    if (representation == null) {
+      if (!validationOptionSet.contains(
+          PropertyValidationOption.Immediate.DO_NOT_FAIL_IF_NOT_DECLARED)) {
+        throw new AssertionError("No property '%s' found.".formatted(property.name()));
+      }
+      return ValidatedFormProperty.markAsValid(property);
+    }
+
+    if (representation.readOnly()
+        && !validationOptionSet.contains(
+            PropertyValidationOption.Immediate.DO_NOT_FAIL_IF_DECLARED_READ_ONLY)) {
       throw new AssertionError(
           "Cannot set value for read-only property '%s'".formatted(property.name()));
     }
@@ -181,12 +216,5 @@ public class Form {
       throw new AssertionError(firstValidationError.reason());
     }
     return validatedFormProperty;
-  }
-
-  private TemplatePropertyRepresentation requireTemplate(FormProperty<?> property) {
-    TemplateRepresentation templateRepresentation = template.representation();
-    return Optional.ofNullable(templateRepresentation.propertyByName().get(property.name()))
-        .orElseThrow(
-            () -> new AssertionError("No property '%s' found.".formatted(property.name())));
   }
 }

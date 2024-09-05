@@ -1,6 +1,7 @@
 package com.cosium.hal_mock_mvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -325,7 +326,7 @@ class FormTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"month", "week", "number"})
-  @DisplayName("User cannot pass a number value when the type is only compatible with number")
+  @DisplayName("User can pass a number value when the type is only compatible with number")
   void test7(String halFormType) throws Exception {
     myController.getResponseToSend =
         JSON.std
@@ -1759,6 +1760,87 @@ class FormTest {
 
     assertThat(JsonPath.parse(myController.receivedPutBody).read("$.foo", String.class))
         .isEqualTo("baz");
+  }
+
+  @Test
+  @DisplayName("User can force pass an unknown property")
+  void test38() throws Exception {
+    myController.getResponseToSend =
+        JSON.std
+            .composeString()
+            .startObject()
+            .startObjectField("_links")
+            .startObjectField("self")
+            .put("href", "http://localhost/form-test:put")
+            .end()
+            .end()
+            .startObjectField("_templates")
+            .startObjectField("default")
+            .put("method", "PUT")
+            .startArrayField("properties")
+            .end()
+            .end()
+            .end()
+            .end()
+            .finish();
+
+    Form form =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .templates()
+            .byKey("default")
+            .createForm();
+
+    assertThatCode(
+            () ->
+                form.withString(
+                    "foo", "foo", PropertyValidationOption.Immediate.DO_NOT_FAIL_IF_NOT_DECLARED))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @DisplayName("User can force a readonly property")
+  void test39() throws Exception {
+    myController.getResponseToSend =
+        JSON.std
+            .composeString()
+            .startObject()
+            .startObjectField("_links")
+            .startObjectField("self")
+            .put("href", "http://localhost/form-test:put")
+            .end()
+            .end()
+            .startObjectField("_templates")
+            .startObjectField("default")
+            .put("method", "PUT")
+            .startArrayField("properties")
+            .startObject()
+            .put("name", "foo")
+            .put("readOnly", true)
+            .end()
+            .end()
+            .end()
+            .end()
+            .end()
+            .finish();
+
+    Form form =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .templates()
+            .byKey("default")
+            .createForm();
+    assertThatCode(
+            () ->
+                form.withString(
+                    "foo",
+                    "foo",
+                    PropertyValidationOption.Immediate.DO_NOT_FAIL_IF_DECLARED_READ_ONLY))
+        .doesNotThrowAnyException();
   }
 
   @Controller
