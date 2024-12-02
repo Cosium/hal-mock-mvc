@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import java.io.IOException;
 import java.util.Map;
@@ -15,15 +15,8 @@ import java.util.Map;
 /**
  * @author Réda Housni Alaoui
  */
-class InlineElementRepresentationDeserializer extends StdDeserializer<InlineElementRepresentation> {
-
-  public InlineElementRepresentationDeserializer() {
-    this(null);
-  }
-
-  protected InlineElementRepresentationDeserializer(Class<?> vc) {
-    super(vc);
-  }
+class InlineElementRepresentationDeserializer
+    extends JsonDeserializer<InlineElementRepresentation> {
 
   @Override
   public InlineElementRepresentation deserialize(JsonParser p, DeserializationContext ctxt)
