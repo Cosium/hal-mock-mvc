@@ -14,7 +14,7 @@
 
   <groupId>com.cosium.hal_mock_mvc</groupId>
   <artifactId>hal-mock-mvc-parent</artifactId>
-  <version>3.3-SNAPSHOT</version>
+  <version>3.3</version>
   <packaging>pom</packaging>
 
   <properties>
@@ -86,7 +86,7 @@
     <connection>scm:git:https://github.com/Cosium/hal-mock-mvc</connection>
     <developerConnection>scm:git:https://github.com/Cosium/hal-mock-mvc</developerConnection>
     <url>https://github.com/Cosium/hal-mock-mvc</url>
-    <tag>HEAD</tag>
+    <tag>3.3</tag>
   </scm>
 
   <organization>
