@@ -128,6 +128,11 @@ public class Form {
     return requestExecutor.assertCreatedAndShift(submit());
   }
 
+  /** Submit the form by expecting 204 No Content then resume the traversal. */
+  public HalMockMvc submitAndExpectNoContent() throws Exception {
+    return requestExecutor.assert204NoContentAndResume(submit());
+  }
+
   /** Submits the form */
   public ResultActions submit() throws Exception {
     String contentType = template.representation().contentType();

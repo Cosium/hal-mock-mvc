@@ -51,4 +51,9 @@ public class TemplateMultipartRequest implements SubmittableTemplate {
   public HalMockMvc createAndShift() throws Exception {
     return requestExecutor.assertCreatedAndShift(submit());
   }
+
+  @Override
+  public HalMockMvc submitAndExpect204NoContent() throws Exception {
+    return requestExecutor.assert204NoContentAndResume(submit());
+  }
 }

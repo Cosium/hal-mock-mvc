@@ -45,6 +45,11 @@ public class Template implements SubmittableTemplate {
     return createAndShift(null);
   }
 
+  @Override
+  public HalMockMvc submitAndExpect204NoContent() throws Exception {
+    return submitAndExpect204NoContent(null);
+  }
+
   /**
    * Submits the template by expecting a 201 Created response then begins a new traversal starting
    * at the returned Location header.
@@ -53,6 +58,15 @@ public class Template implements SubmittableTemplate {
    */
   public HalMockMvc createAndShift(String content) throws Exception {
     return requestExecutor.assertCreatedAndShift(submit(content));
+  }
+
+  /**
+   * Submit the template by expecting 204 No Content then resume the traversal.
+   *
+   * @param content The content to submit
+   */
+  public HalMockMvc submitAndExpect204NoContent(String content) throws Exception {
+    return requestExecutor.assert204NoContentAndResume(submit(content));
   }
 
   @Override

@@ -15,4 +15,7 @@ public interface SubmittableTemplate {
    * at the returned Location header.
    */
   HalMockMvc createAndShift() throws Exception;
+
+  /** Submit the template by expecting 204 No Content then resume the traversal. */
+  HalMockMvc submitAndExpect204NoContent() throws Exception;
 }

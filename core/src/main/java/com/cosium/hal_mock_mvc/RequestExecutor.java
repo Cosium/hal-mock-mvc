@@ -45,6 +45,12 @@ class RequestExecutor {
     return shiftTo(location);
   }
 
+  public HalMockMvc assert204NoContentAndResume(ResultActions resultActions) throws Exception {
+    resultActions.andExpect(status().isNoContent());
+    String requestURI = resultActions.andReturn().getRequest().getRequestURI();
+    return shiftTo(requestURI);
+  }
+
   private HalMockMvc shiftTo(String location) {
     return HalMockMvc.builder(mockMvc)
         .baseUri(location)

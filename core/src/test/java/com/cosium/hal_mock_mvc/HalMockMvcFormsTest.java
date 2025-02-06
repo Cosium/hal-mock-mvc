@@ -1,6 +1,7 @@
 package com.cosium.hal_mock_mvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.afford;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -204,6 +205,48 @@ class HalMockMvcFormsTest {
     assertThat(myController.personByName).containsKey("john");
   }
 
+  @Test
+  @DisplayName("PUT template then GET updated resource")
+  void test9() throws Exception {
+
+    HalMockMvc.builder(mockMvc)
+        .baseUri(linkTo(methodOn(MyController.class).list()).toUri())
+        .build()
+        .follow()
+        .templates()
+        .byKey("create")
+        .createAndShift(JSON.std.composeString().startObject().put("name", "john").end().finish())
+        .follow()
+        .templates()
+        .byKey("changeCity")
+        .submitAndExpect204NoContent(
+            JSON.std.composeString().startObject().put("city", "Casablanca").end().finish())
+        .follow()
+        .get()
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.value").value("Casablanca"));
+  }
+
+  @Test
+  @DisplayName("submitAndExpect204NoContent fails if the response status is not 204")
+  void test10() throws Exception {
+
+    Template template =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).list()).toUri())
+            .build()
+            .follow()
+            .templates()
+            .byKey("create");
+
+    String createCommand =
+        JSON.std.composeString().startObject().put("name", "john").end().finish();
+
+    assertThatThrownBy(() -> template.submitAndExpect204NoContent(createCommand))
+        .isInstanceOf(AssertionError.class)
+        .hasMessageContaining("Status expected:<204> but was:<201>");
+  }
+
   @Controller
   @RequestMapping("/HalMockMvcFormsTest")
   public static class MyController {
@@ -267,6 +310,15 @@ class HalMockMvcFormsTest {
       }
       resource.city = command.city;
       return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{name}/city")
+    public ResponseEntity<?> getCity(@PathVariable("name") String name) {
+      PersonResource resource = personByName.get(name);
+      if (resource == null) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.ok(Map.of("value", resource.city));
     }
 
     @DeleteMapping("/{name}")
