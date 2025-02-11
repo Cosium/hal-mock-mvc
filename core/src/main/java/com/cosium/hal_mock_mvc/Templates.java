@@ -1,7 +1,9 @@
 package com.cosium.hal_mock_mvc;
 
+import static com.cosium.hal_mock_mvc.OrMatcher.anyOf;
 import static java.util.Objects.requireNonNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,8 +16,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
@@ -30,27 +30,17 @@ public class Templates {
   Templates(RequestExecutor requestExecutor, ResultActions resultActions) throws Exception {
     this.requestExecutor = requireNonNull(requestExecutor);
 
-    resultActions.andExpect(content().contentType(MediaTypes.HAL_FORMS_JSON));
+    resultActions
+        .andExpect(anyOf(status().is2xxSuccessful(), status().is3xxRedirection()))
+        .andExpect(content().contentType(MediaTypes.HAL_FORMS_JSON));
 
-    MvcResult mvcResult = resultActions.andReturn();
-    MockHttpServletResponse response = mvcResult.getResponse();
-    int responseStatus = response.getStatus();
-    String jsonBody = response.getContentAsString();
-    if (responseStatus < 200 || responseStatus >= 400) {
-      throw new IllegalStateException(
-          "GET on "
-              + mvcResult.getRequest().getRequestURI()
-              + " failed with code "
-              + responseStatus
-              + " and body '"
-              + jsonBody
-              + "'");
-    }
     objectMapper =
         new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .registerModule(new JacksonModule());
-    body = objectMapper.readValue(jsonBody, HalFormsBody.class);
+    body =
+        objectMapper.readValue(
+            resultActions.andReturn().getResponse().getContentAsString(), HalFormsBody.class);
   }
 
   public Optional<Template> byOptionalKey(String key) {
