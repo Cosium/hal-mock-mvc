@@ -197,6 +197,9 @@ public class Form {
       FormProperty<?> property, PropertyValidationOption... validationOptions) throws Exception {
     Set<PropertyValidationOption> validationOptionSet =
         Optional.ofNullable(validationOptions).map(Set::of).orElse(Set.of());
+    if (validationOptionSet.contains(PropertyValidationOption.Immediate.DO_NOT_FAIL_IF_NOT_VALID)) {
+      return ValidatedFormProperty.markAsValid(property);
+    }
     TemplatePropertyRepresentation representation =
         template.representation().propertyByName().get(property.name());
     if (representation == null) {

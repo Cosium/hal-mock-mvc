@@ -7,6 +7,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.cosium.hal_mock_mvc.PropertyValidationOption.Immediate;
 import com.fasterxml.jackson.jr.ob.JSON;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -1840,6 +1841,40 @@ class FormTest {
                     "foo",
                     "foo",
                     PropertyValidationOption.Immediate.DO_NOT_FAIL_IF_DECLARED_READ_ONLY))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @DisplayName("User can force an invalid property")
+  void test40() throws Exception {
+    myController.getResponseToSend =
+        JSON.std
+            .composeString()
+            .startObject()
+            .startObjectField("_links")
+            .startObjectField("self")
+            .put("href", "http://localhost/form-test:put")
+            .end()
+            .end()
+            .startObjectField("_templates")
+            .startObjectField("default")
+            .put("method", "PUT")
+            .startArrayField("properties")
+            .end()
+            .end()
+            .end()
+            .end()
+            .finish();
+
+    Form form =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .templates()
+            .byKey("default")
+            .createForm();
+    assertThatCode(() -> form.withString("foo", "foo", Immediate.DO_NOT_FAIL_IF_NOT_VALID))
         .doesNotThrowAnyException();
   }
 
