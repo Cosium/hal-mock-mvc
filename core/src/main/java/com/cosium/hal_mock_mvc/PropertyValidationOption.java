@@ -9,6 +9,8 @@ public sealed interface PropertyValidationOption permits PropertyValidationOptio
     /** Do not fail if writing to a property not declared by the template */
     DO_NOT_FAIL_IF_NOT_DECLARED,
     /** Do not fail if writing to a property declared as read-only by the template */
-    DO_NOT_FAIL_IF_DECLARED_READ_ONLY
+    DO_NOT_FAIL_IF_DECLARED_READ_ONLY,
+    /** Do not fail if writing invalid value to a property */
+    DO_NOT_FAIL_IF_NOT_VALID,
   }
 }
