@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.cosium.hal_mock_mvc</groupId>
     <artifactId>hal-mock-mvc-parent</artifactId>
-    <version>4.1</version>
+    <version>4.2-SNAPSHOT</version>
   </parent>
 
   <name>HAL Mock MVC Spring Boot Starter</name>
