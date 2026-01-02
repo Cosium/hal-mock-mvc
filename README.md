@@ -38,7 +38,7 @@ MockMvc wrapper allowing to easily test [Spring HATEOAS](https://github.com/spri
 # Prerequisites
 
 - Java 17+
-- Spring dependencies matching Spring Boot 3 and above.
+- Spring dependencies matching Spring Boot 4 and above.
 
 # Genesis
 

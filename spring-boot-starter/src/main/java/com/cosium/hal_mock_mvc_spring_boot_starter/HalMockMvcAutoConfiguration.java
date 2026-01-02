@@ -4,12 +4,12 @@ import com.cosium.hal_mock_mvc.HalMockMvc;
 import com.cosium.hal_mock_mvc.HalMockMvcBuilders;
 import java.util.List;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.MockMvcAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.lang.Nullable;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**

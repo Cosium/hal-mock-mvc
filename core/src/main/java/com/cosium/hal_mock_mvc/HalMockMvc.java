@@ -16,9 +16,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 /**
  *
@@ -63,17 +60,17 @@ public class HalMockMvc {
   private final MockMvc mockMvc;
   private final String baseUri;
   private final List<RequestPostProcessor> requestPostProcessors;
-  private final MultiValueMap<String, String> headers;
+  private final HttpHeaders headers;
 
   private HalMockMvc(
       MockMvc mockMvc,
       String baseUri,
       List<RequestPostProcessor> requestPostProcessors,
-      MultiValueMap<String, String> headers) {
+      HttpHeaders headers) {
     this.mockMvc = requireNonNull(mockMvc);
     this.baseUri = requireNonNull(baseUri);
     this.requestPostProcessors = List.copyOf(requestPostProcessors);
-    this.headers = CollectionUtils.unmodifiableMultiValueMap(new LinkedMultiValueMap<>(headers));
+    this.headers = HttpHeaders.copyOf(headers);
   }
 
   public static Builder builder(MockMvc mockMvc) {
@@ -267,10 +264,10 @@ public class HalMockMvc {
     private final MockMvc mockMvc;
     private String baseUri;
     private final List<RequestPostProcessor> requestPostProcessors;
-    private final MultiValueMap<String, String> headers;
+    private final HttpHeaders headers;
 
     private Builder(MockMvc mockMvc) {
-      this(mockMvc, DEFAULT_BASE_URI, List.of(), new LinkedMultiValueMap<>());
+      this(mockMvc, DEFAULT_BASE_URI, List.of(), new HttpHeaders());
     }
 
     private Builder(HalMockMvc halMockMvc) {
@@ -285,11 +282,11 @@ public class HalMockMvc {
         MockMvc mockMvc,
         String baseUri,
         List<RequestPostProcessor> requestPostProcessors,
-        MultiValueMap<String, String> headers) {
+        HttpHeaders headers) {
       this.mockMvc = mockMvc;
       this.baseUri = baseUri;
       this.requestPostProcessors = new ArrayList<>(requestPostProcessors);
-      this.headers = new LinkedMultiValueMap<>(headers);
+      this.headers = HttpHeaders.copyOf(headers);
     }
 
     /**
@@ -325,12 +322,6 @@ public class HalMockMvc {
      */
     public Builder header(String name, String... values) {
       headers.put(name, List.of(values));
-      return this;
-    }
-
-    public Builder headers(MultiValueMap<String, String> headers) {
-      this.headers.clear();
-      this.headers.addAll(headers);
       return this;
     }
 

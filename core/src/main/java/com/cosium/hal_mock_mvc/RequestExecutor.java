@@ -8,7 +8,7 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 /**
@@ -27,7 +27,8 @@ class RequestExecutor {
     this.httpHeaders = requireNonNull(httpHeaders);
   }
 
-  public ResultActions execute(MockHttpServletRequestBuilder requestBuilder) throws Exception {
+  public ResultActions execute(AbstractMockHttpServletRequestBuilder<?> requestBuilder)
+      throws Exception {
     postProcessors.forEach(requestBuilder::with);
     return mockMvc.perform(requestBuilder.accept(MediaTypes.HAL_FORMS_JSON).headers(httpHeaders));
   }

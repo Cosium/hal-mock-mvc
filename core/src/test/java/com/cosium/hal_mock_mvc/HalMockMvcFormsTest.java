@@ -142,7 +142,7 @@ class HalMockMvcFormsTest {
             .templates()
             .list();
 
-    assertThat(templates).hasSize(3).map(Template::key).contains("default", "create", "addFile");
+    assertThat(templates).hasSize(3).map(Template::key).contains("post", "create", "addFile");
     assertThat(templates)
         .filteredOn(template -> "create".equals(template.key()))
         .map(Template::representation)

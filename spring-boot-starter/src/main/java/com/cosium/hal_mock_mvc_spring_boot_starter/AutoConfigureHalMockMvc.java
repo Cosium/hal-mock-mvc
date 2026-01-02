@@ -6,8 +6,8 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint;
 import org.springframework.core.annotation.AliasFor;
 
 /**
@@ -42,14 +42,8 @@ public @interface AutoConfigureHalMockMvc {
   boolean printOnlyOnFailure() default true;
 
   /**
-   * @see AutoConfigureMockMvc#webClientEnabled()
+   * @see AutoConfigureMockMvc#htmlUnit()
    */
-  @AliasFor(annotation = AutoConfigureMockMvc.class, attribute = "webClientEnabled")
-  boolean webClientEnabled() default true;
-
-  /**
-   * @see AutoConfigureMockMvc#webDriverEnabled()
-   */
-  @AliasFor(annotation = AutoConfigureMockMvc.class, attribute = "webDriverEnabled")
-  boolean webDriverEnabled() default true;
+  @AliasFor(annotation = AutoConfigureMockMvc.class, attribute = "htmlUnit")
+  AutoConfigureMockMvc.HtmlUnit htmlUnit() default @AutoConfigureMockMvc.HtmlUnit;
 }
