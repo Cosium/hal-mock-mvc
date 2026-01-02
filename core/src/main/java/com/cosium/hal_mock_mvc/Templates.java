@@ -7,8 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -17,6 +15,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.web.servlet.ResultActions;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * @author Réda Housni Alaoui
@@ -35,9 +36,10 @@ public class Templates {
         .andExpect(content().contentType(MediaTypes.HAL_FORMS_JSON));
 
     objectMapper =
-        new ObjectMapper()
+        JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .registerModule(new JacksonModule());
+            .addModule(new JacksonModule())
+            .build();
     body =
         objectMapper.readValue(
             resultActions.andReturn().getResponse().getContentAsString(), HalFormsBody.class);

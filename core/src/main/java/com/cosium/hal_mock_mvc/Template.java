@@ -2,11 +2,11 @@ package com.cosium.hal_mock_mvc;
 
 import static java.util.Objects.requireNonNull;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * @author Réda Housni Alaoui

@@ -7,10 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.cosium.hal_mock_mvc.template.options.InlineElementRepresentation;
 import com.cosium.hal_mock_mvc.template.options.OptionsLinkRepresentation;
 import com.cosium.hal_mock_mvc.template.options.OptionsRepresentation;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.springframework.hateoas.Link;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * @author Réda Housni Alaoui

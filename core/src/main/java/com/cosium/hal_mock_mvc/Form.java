@@ -2,7 +2,6 @@ package com.cosium.hal_mock_mvc;
 
 import static java.util.Objects.requireNonNull;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +11,7 @@ import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * @author Réda Housni Alaoui

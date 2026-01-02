@@ -3,12 +3,12 @@ package com.cosium.hal_mock_mvc;
 import static java.util.Objects.requireNonNull;
 
 import com.cosium.hal_mock_mvc.template.options.OptionsRepresentation;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * @author Réda Housni Alaoui

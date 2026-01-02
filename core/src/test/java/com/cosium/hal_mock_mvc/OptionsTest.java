@@ -8,7 +8,6 @@ import com.cosium.hal_mock_mvc.template.options.MapInlineElementRepresentation;
 import com.cosium.hal_mock_mvc.template.options.OptionsLinkRepresentation;
 import com.cosium.hal_mock_mvc.template.options.OptionsRepresentation;
 import com.cosium.hal_mock_mvc.template.options.StringInlineElementRepresentation;
-import com.fasterxml.jackson.jr.ob.JSON;
 import jakarta.inject.Inject;
 import java.io.IOException;
 import java.util.Map;
@@ -22,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import tools.jackson.jr.ob.JSON;
 
 /**
  * @author Réda Housni Alaoui
@@ -62,10 +62,10 @@ class OptionsTest {
   }
 
   @Test
-  void referenceFields() throws Exception {
+  void referencePropertys() throws Exception {
     OptionsRepresentation options =
         HalMockMvc.builder(mockMvc)
-            .baseUri(linkTo(methodOn(MyController.class).getReferenceFields()).toUri())
+            .baseUri(linkTo(methodOn(MyController.class).getReferenceProperties()).toUri())
             .build()
             .follow()
             .templates()
@@ -162,22 +162,22 @@ class OptionsTest {
           JSON.std
               .composeString()
               .startObject()
-              .startObjectField("_links")
-              .startObjectField("self")
+              .startObjectProperty("_links")
+              .startObjectProperty("self")
               .put("href", "https://api.example.org/")
               .end()
               .end()
-              .startObjectField("_templates")
-              .startObjectField("default")
+              .startObjectProperty("_templates")
+              .startObjectProperty("default")
               .put("method", "POST")
-              .startArrayField("properties")
+              .startArrayProperty("properties")
               .startObject()
               .put("name", "shipping")
-              .startObjectField("options")
-              .startArrayField("selectedValues")
+              .startObjectProperty("options")
+              .startArrayProperty("selectedValues")
               .add("FedEx")
               .end()
-              .startArrayField("inline")
+              .startArrayProperty("inline")
               .add("FedEx")
               .add("UPS")
               .add("DHL")
@@ -193,28 +193,28 @@ class OptionsTest {
     }
 
     @GetMapping("options-test-affordance:reference-fields")
-    public ResponseEntity<?> getReferenceFields() throws IOException {
+    public ResponseEntity<?> getReferenceProperties() {
 
       String json =
           JSON.std
               .composeString()
               .startObject()
-              .startObjectField("_links")
-              .startObjectField("self")
+              .startObjectProperty("_links")
+              .startObjectProperty("self")
               .put("href", "https://api.example.org/")
               .end()
               .end()
-              .startObjectField("_templates")
-              .startObjectField("default")
+              .startObjectProperty("_templates")
+              .startObjectProperty("default")
               .put("method", "POST")
-              .startArrayField("properties")
+              .startArrayProperty("properties")
               .startObject()
               .put("name", "shipping")
-              .startObjectField("options")
-              .startArrayField("selectedValues")
+              .startObjectProperty("options")
+              .startArrayProperty("selectedValues")
               .add("FedEx")
               .end()
-              .startArrayField("inline")
+              .startArrayProperty("inline")
               .startObject()
               .put("shipName", "Federal Express")
               .put("shipCode", "FedEx")
@@ -241,28 +241,28 @@ class OptionsTest {
     }
 
     @GetMapping("options-test-affordance:multiple-return-values")
-    public ResponseEntity<?> getMultipleReturnValues() throws IOException {
+    public ResponseEntity<?> getMultipleReturnValues() {
 
       String json =
           JSON.std
               .composeString()
               .startObject()
-              .startObjectField("_links")
-              .startObjectField("self")
+              .startObjectProperty("_links")
+              .startObjectProperty("self")
               .put("href", "https://api.example.org/")
               .end()
               .end()
-              .startObjectField("_templates")
-              .startObjectField("default")
+              .startObjectProperty("_templates")
+              .startObjectProperty("default")
               .put("method", "POST")
-              .startArrayField("properties")
+              .startArrayProperty("properties")
               .startObject()
               .put("name", "shipping")
-              .startObjectField("options")
-              .startArrayField("selectedValues")
+              .startObjectProperty("options")
+              .startArrayProperty("selectedValues")
               .add("FedEx")
               .end()
-              .startArrayField("inline")
+              .startArrayProperty("inline")
               .startObject()
               .put("shipName", "Federal Express")
               .put("shipCode", "FedEx")
@@ -291,27 +291,27 @@ class OptionsTest {
     }
 
     @GetMapping("options-test-affordance:external-array-of-values")
-    public ResponseEntity<?> getExternalArrayOfValues() throws IOException {
+    public ResponseEntity<?> getExternalArrayOfValues() {
       String json =
           JSON.std
               .composeString()
               .startObject()
-              .startObjectField("_links")
-              .startObjectField("self")
+              .startObjectProperty("_links")
+              .startObjectProperty("self")
               .put("href", "https://api.example.org/")
               .end()
               .end()
-              .startObjectField("_templates")
-              .startObjectField("default")
+              .startObjectProperty("_templates")
+              .startObjectProperty("default")
               .put("method", "POST")
-              .startArrayField("properties")
+              .startArrayProperty("properties")
               .startObject()
               .put("name", "shipping")
-              .startObjectField("options")
-              .startArrayField("selectedValues")
+              .startObjectProperty("options")
+              .startArrayProperty("selectedValues")
               .add("FedEx")
               .end()
-              .startObjectField("link")
+              .startObjectProperty("link")
               .put("href", "http://api.examples.org/shipping-options")
               .put("templated", false)
               .put("type", "application/json")

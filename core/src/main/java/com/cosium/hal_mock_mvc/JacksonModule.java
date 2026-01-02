@@ -1,18 +1,13 @@
 package com.cosium.hal_mock_mvc;
 
 import com.cosium.hal_mock_mvc.template.options.InlineElementRepresentation;
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import tools.jackson.core.Version;
+import tools.jackson.databind.module.SimpleDeserializers;
 
 /**
  * @author Réda Housni Alaoui
  */
-class JacksonModule extends SimpleModule {
-
-  public JacksonModule() {
-    addDeserializer(
-        InlineElementRepresentation.class, new InlineElementRepresentationDeserializer());
-  }
+class JacksonModule extends tools.jackson.databind.JacksonModule {
 
   @Override
   public String getModuleName() {
@@ -22,5 +17,13 @@ class JacksonModule extends SimpleModule {
   @Override
   public Version version() {
     return Version.unknownVersion();
+  }
+
+  @Override
+  public void setupModule(SetupContext context) {
+    context.addDeserializers(
+        new SimpleDeserializers()
+            .addDeserializer(
+                InlineElementRepresentation.class, new InlineElementRepresentationDeserializer()));
   }
 }

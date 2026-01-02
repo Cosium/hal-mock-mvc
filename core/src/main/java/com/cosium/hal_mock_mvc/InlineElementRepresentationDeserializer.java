@@ -3,24 +3,24 @@ package com.cosium.hal_mock_mvc;
 import com.cosium.hal_mock_mvc.template.options.InlineElementRepresentation;
 import com.cosium.hal_mock_mvc.template.options.MapInlineElementRepresentation;
 import com.cosium.hal_mock_mvc.template.options.StringInlineElementRepresentation;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import java.io.IOException;
 import java.util.Map;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.exc.MismatchedInputException;
 
 /**
  * @author Réda Housni Alaoui
  */
 class InlineElementRepresentationDeserializer
-    extends JsonDeserializer<InlineElementRepresentation> {
+    extends ValueDeserializer<InlineElementRepresentation> {
 
   @Override
   public InlineElementRepresentation deserialize(JsonParser p, DeserializationContext ctxt)
-      throws IOException {
+      throws JacksonException {
 
     JsonToken currentToken = p.currentToken();
     if (currentToken == JsonToken.START_OBJECT) {

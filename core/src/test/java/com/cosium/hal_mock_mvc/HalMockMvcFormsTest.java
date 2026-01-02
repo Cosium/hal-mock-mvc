@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.jr.ob.JSON;
 import jakarta.inject.Inject;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.jr.ob.JSON;
 
 /**
  * @author Réda Housni Alaoui
