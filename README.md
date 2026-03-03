@@ -93,16 +93,6 @@ halMockMvc.follow("user").delete()
     .andExpect(status().isNoContent());
 ```
 
-For finer control, use the `request()` builder:
-
-```java
-halMockMvc.follow("users")
-    .request()
-    .jsonContent("{\"name\":\"john\"}")
-    .post()
-    .andExpect(status().isCreated());
-```
-
 ## HAL-FORMS templates
 
 Discover a template by key and submit it with raw JSON:
