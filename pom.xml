@@ -20,7 +20,7 @@
   <properties>
     <spring-boot.version>4.0.1</spring-boot.version>
 
-    <git-code-format-maven-plugin.version>5.4</git-code-format-maven-plugin.version>
+    <git-code-format-maven-plugin.version>6.0</git-code-format-maven-plugin.version>
   </properties>
 
   <modules>
