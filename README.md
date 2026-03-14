@@ -5,6 +5,11 @@
 
 MockMvc wrapper allowing to easily test [Spring HATEOAS](https://github.com/spring-projects/spring-hateoas) HAL(-FORMS) endpoints.
 
+# Prerequisites
+
+- Java 17+
+- Spring dependencies matching Spring Boot 4 and above.
+
 # Quick start
 
 1. Add the `spring-boot-starter` dependency:
@@ -274,11 +279,6 @@ class MyHalMockMvcConfig {
     }
 }
 ```
-
-# Prerequisites
-
-- Java 17+
-- Spring dependencies matching Spring Boot 4 and above.
 
 # Genesis
 
