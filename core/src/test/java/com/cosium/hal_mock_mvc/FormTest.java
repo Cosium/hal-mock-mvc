@@ -1878,6 +1878,62 @@ class FormTest {
         .doesNotThrowAnyException();
   }
 
+  @Test
+  @DisplayName("Options referring a link href containing encoded URI path are supported")
+  void test41() throws Exception {
+    myController.getResponseToSend =
+        JSON.std
+            .composeString()
+            .startObject()
+            .startObjectProperty("_links")
+            .startObjectProperty("self")
+            .put("href", "http://localhost/form-test:put")
+            .end()
+            .end()
+            .startObjectProperty("_templates")
+            .startObjectProperty("default")
+            .put("method", "PUT")
+            .startArrayProperty("properties")
+            .startObject()
+            .put("name", "foo")
+            .startObjectProperty("options")
+            .startObjectProperty("link")
+            .put("href", "http://localhost/form-test%3Aget-options")
+            .end()
+            .end()
+            .end()
+            .end()
+            .end()
+            .end()
+            .end()
+            .finish();
+
+    myController.getOptionsResponseToSend =
+        ResponseEntity.ok(
+            JSON.std
+                .composeString()
+                .startArray()
+                .startObject()
+                .put("value", "bar")
+                .end()
+                .end()
+                .finish());
+
+    HalMockMvc.builder(mockMvc)
+        .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+        .build()
+        .follow()
+        .templates()
+        .byKey("default")
+        .createForm()
+        .withString("foo", "bar")
+        .submit()
+        .andExpect(status().isNoContent());
+
+    assertThat(JsonPath.parse(myController.receivedPutBody).read("$.foo", String.class))
+        .isEqualTo("bar");
+  }
+
   @Controller
   public static class MyController {
 

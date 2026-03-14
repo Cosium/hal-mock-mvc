@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.cosium.hal_mock_mvc.template.options.InlineElementRepresentation;
 import com.cosium.hal_mock_mvc.template.options.OptionsLinkRepresentation;
 import com.cosium.hal_mock_mvc.template.options.OptionsRepresentation;
+import java.net.URI;
 import java.util.List;
 import org.springframework.hateoas.Link;
 import tools.jackson.core.type.TypeReference;
@@ -95,7 +96,7 @@ class TemplateOptions {
 
     String rawOptions =
         requestExecutor
-            .execute(get(optionsHref))
+            .execute(get(URI.create(optionsHref)))
             .andExpect(status().is2xxSuccessful())
             .andReturn()
             .getResponse()
