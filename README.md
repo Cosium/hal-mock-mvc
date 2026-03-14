@@ -1,5 +1,5 @@
 [![Build Status](https://github.com/Cosium/hal-mock-mvc/actions/workflows/ci.yml/badge.svg)](https://github.com/Cosium/hal-mock-mvc/actions/workflows/ci.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/com.cosium.hal_mock_mvc/hal-mock-mvc-spring-boot-starter.svg)](https://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.cosium.hal_mock_mvc%22%20AND%20a%3A%22hal-mock-mvc-spring-boot-starter%22)
+[![Maven Central](https://img.shields.io/maven-central/v/com.cosium.hal_mock_mvc/hal-mock-mvc-spring-boot-starter.svg)](https://central.sonatype.com/artifact/com.cosium.hal_mock_mvc/hal-mock-mvc)
 
 # HAL Mock MVC
 
