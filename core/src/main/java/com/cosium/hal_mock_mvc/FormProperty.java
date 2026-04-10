@@ -35,6 +35,10 @@ record FormProperty<T>(Class<T> valueType, String name, List<T> values, boolean 
     return Set.of(Integer.class, Long.class, Double.class).contains(valueType);
   }
 
+  public boolean isBooleanValueType() {
+    return Boolean.class.equals(valueType);
+  }
+
   public List<Double> toDoubleValues() {
     if (!isNumberValueType()) {
       throw new IllegalArgumentException("%s is not a number type".formatted(valueType));

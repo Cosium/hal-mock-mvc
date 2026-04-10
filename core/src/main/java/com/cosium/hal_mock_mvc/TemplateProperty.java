@@ -33,6 +33,8 @@ class TemplateProperty {
 
   private static final Set<String> NUMBER_HAL_FORMS_TYPES = Set.of("month", "week", "number");
 
+  private static final Set<String> BOOLEAN_HAL_FORMS_TYPES = Set.of("checkbox");
+
   private final RequestExecutor requestExecutor;
   private final ObjectMapper objectMapper;
   private final TemplatePropertyRepresentation representation;
@@ -106,6 +108,13 @@ class TemplateProperty {
           .serverSideVerifiable(true)
           .reason(
               "Value must be of type Number because property '%s' has type '%s'"
+                  .formatted(property.name(), type));
+    }
+    if (BOOLEAN_HAL_FORMS_TYPES.contains(type) && !property.isBooleanValueType()) {
+      return ValidatedFormProperty.invalidBuilder(property)
+          .serverSideVerifiable(true)
+          .reason(
+              "Value must be of type Boolean because property '%s' has type '%s'"
                   .formatted(property.name(), type));
     }
 
