@@ -1934,6 +1934,93 @@ class FormTest {
         .isEqualTo("bar");
   }
 
+  @Test
+  @DisplayName("User can pass a boolean value to a checkbox")
+  void test42() throws Exception {
+    myController.getResponseToSend =
+        JSON.std
+            .composeString()
+            .startObject()
+            .startObjectProperty("_links")
+            .startObjectProperty("self")
+            .put("href", "http://localhost/form-test:put")
+            .end()
+            .end()
+            .startObjectProperty("_templates")
+            .startObjectProperty("default")
+            .put("method", "PUT")
+            .startArrayProperty("properties")
+            .startObject()
+            .put("name", "foo")
+            .put("type", "checkbox")
+            .end()
+            .end()
+            .end()
+            .end()
+            .end()
+            .finish();
+
+    HalMockMvc.builder(mockMvc)
+        .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+        .build()
+        .follow()
+        .templates()
+        .byKey("default")
+        .createForm()
+        .withBoolean("foo", true)
+        .submit()
+        .andExpect(status().isNoContent());
+
+    DocumentContext submittedDocument = JsonPath.parse(myController.receivedPutBody);
+    assertThat(submittedDocument.read("$.foo", Boolean.class)).isTrue();
+  }
+
+  @Test
+  @DisplayName("User cannot pass a string value to a checkbox")
+  void test43() throws Exception {
+    myController.getResponseToSend =
+        JSON.std
+            .composeString()
+            .startObject()
+            .startObjectProperty("_links")
+            .startObjectProperty("self")
+            .put("href", "http://localhost/form-test:put")
+            .end()
+            .end()
+            .startObjectProperty("_templates")
+            .startObjectProperty("default")
+            .put("method", "PUT")
+            .startArrayProperty("properties")
+            .startObject()
+            .put("name", "foo")
+            .put("type", "checkbox")
+            .end()
+            .end()
+            .end()
+            .end()
+            .end()
+            .finish();
+
+    Form form =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .templates()
+            .byKey("default")
+            .createForm()
+            .withString("foo", "foo");
+
+    assertThatThrownBy(form::submit)
+        .isInstanceOf(AssertionError.class)
+        .hasMessage(
+            "An http status code 400 was expected because of the following reasons: [Value must be of type Boolean because property 'foo' has type '%s']. Got http status code 204 instead."
+                .formatted("checkbox"));
+
+    myController.putResponseToSend = ResponseEntity.badRequest().build();
+    form.submit().andExpect(status().isBadRequest());
+  }
+
   @Controller
   public static class MyController {
 
