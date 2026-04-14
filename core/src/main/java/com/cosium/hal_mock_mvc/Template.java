@@ -1,8 +1,10 @@
 package com.cosium.hal_mock_mvc;
 
 import static java.util.Objects.requireNonNull;
+import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 import java.net.URI;
+import org.jspecify.annotations.Nullable;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -105,5 +107,11 @@ public class Template implements SubmittableTemplate {
    */
   public TemplateRepresentation representation() {
     return representation;
+  }
+
+  public Template assertTitleEquals(@Nullable String expected) {
+    String actual = representation.title().orElse(null);
+    assertEquals("Template title", expected, actual);
+    return this;
   }
 }
