@@ -1,6 +1,7 @@
 package com.cosium.hal_mock_mvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.afford;
@@ -245,6 +246,25 @@ class HalMockMvcFormsTest {
     assertThatThrownBy(() -> template.submitAndExpect204NoContent(createCommand))
         .isInstanceOf(AssertionError.class)
         .hasMessageContaining("Status expected:<204> but was:<201>");
+  }
+
+  @Test
+  @DisplayName("Equals assertion can be made on a template title")
+  void test11() throws Exception {
+
+    Template template =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).list()).toUri())
+            .build()
+            .follow()
+            .templates()
+            .byKey("create");
+
+    assertThatCode(() -> template.assertTitleEquals("Create")).doesNotThrowAnyException();
+
+    assertThatThrownBy(() -> template.assertTitleEquals("Foo"))
+        .isInstanceOf(AssertionError.class)
+        .hasMessage("Template title expected:<Foo> but was:<Create>");
   }
 
   @Controller
