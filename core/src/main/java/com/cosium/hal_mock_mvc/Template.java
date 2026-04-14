@@ -1,10 +1,11 @@
 package com.cosium.hal_mock_mvc;
 
 import static java.util.Objects.requireNonNull;
-import static org.springframework.test.util.AssertionErrors.assertEquals;
+import static org.springframework.test.util.AssertionErrors.fail;
 
 import java.net.URI;
-import org.jspecify.annotations.Nullable;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -109,9 +110,23 @@ public class Template implements SubmittableTemplate {
     return representation;
   }
 
-  public Template assertTitleEquals(@Nullable String expected) {
-    String actual = representation.title().orElse(null);
-    assertEquals("Template title", expected, actual);
+  @SafeVarargs
+  public final Template assertThat(Consumer<TemplateAssert>... consumers) {
+    TemplateAssert templateAssert = new TemplateAssert(representation);
+    Stream.of(consumers).forEach(consumer -> consumer.accept(templateAssert));
+    return this;
+  }
+
+  @SafeVarargs
+  public final Template assertThatProperty(
+      String propertyName, Consumer<TemplatePropertyAssert>... consumers) {
+    TemplatePropertyRepresentation property = representation.propertyByName().get(propertyName);
+    if (property == null) {
+      fail("No property found for name <%s>".formatted(propertyName));
+      return this;
+    }
+    TemplatePropertyAssert propertyAssert = new TemplatePropertyAssert(property);
+    Stream.of(consumers).forEach(consumer -> consumer.accept(propertyAssert));
     return this;
   }
 }
