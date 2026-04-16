@@ -55,7 +55,7 @@ class TemplateProperty {
   public Optional<Object> defaultValue() {
     OptionsRepresentation options = representation.options().orElse(null);
     if (options == null) {
-      return representation.value().map(Object.class::cast);
+      return representation.rawValue();
     }
 
     Long maxItems = options.maxItems().orElse(null);

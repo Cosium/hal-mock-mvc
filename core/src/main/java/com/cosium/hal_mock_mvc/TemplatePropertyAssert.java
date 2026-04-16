@@ -21,8 +21,8 @@ public class TemplatePropertyAssert {
     return this;
   }
 
-  public TemplatePropertyAssert hasValue(@Nullable String expected) {
-    assertEquals("Property value", expected, property.value().orElse(null));
+  public TemplatePropertyAssert hasValue(@Nullable Object expected) {
+    assertEquals("Property value", expected, property.rawValue().orElse(null));
     return this;
   }
 

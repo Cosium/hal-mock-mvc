@@ -13,7 +13,7 @@ import java.util.Optional;
 public class TemplatePropertyRepresentation {
   private final String name;
   private final boolean required;
-  private final String value;
+  private final Object value;
   private final String prompt;
   private final String regex;
   private final boolean templated;
@@ -30,7 +30,7 @@ public class TemplatePropertyRepresentation {
   TemplatePropertyRepresentation(
       @JsonProperty("name") String name,
       @JsonProperty("required") Boolean required,
-      @JsonProperty("value") String value,
+      @JsonProperty("value") Object value,
       @JsonProperty("prompt") String prompt,
       @JsonProperty("regex") String regex,
       @JsonProperty("templated") Boolean templated,
@@ -74,7 +74,15 @@ public class TemplatePropertyRepresentation {
     return required;
   }
 
+  /**
+   * @deprecated Use {@link #rawValue()} instead
+   */
+  @Deprecated(forRemoval = true)
   public Optional<String> value() {
+    return Optional.ofNullable(value).map(String::valueOf);
+  }
+
+  public Optional<Object> rawValue() {
     return Optional.ofNullable(value);
   }
 
