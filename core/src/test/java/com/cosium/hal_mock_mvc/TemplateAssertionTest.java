@@ -595,6 +595,49 @@ class TemplateAssertionTest {
         .hasMessage("Property step expected:<4.0> but was:<5.0>");
   }
 
+  @Test
+  @DisplayName("Assert on non string property value")
+  void test14() throws Exception {
+
+    myController.getResponseToSend =
+        JSON.std
+            .composeString()
+            .startObject()
+            .startObjectProperty("_links")
+            .startObjectProperty("self")
+            .put("href", "http://localhost/template-assertion-test:put")
+            .end()
+            .end()
+            .startObjectProperty("_templates")
+            .startObjectProperty("create")
+            .put("method", "PUT")
+            .startArrayProperty("properties")
+            .startObject()
+            .put("name", "foo")
+            .put("value", true)
+            .end()
+            .end()
+            .end()
+            .end()
+            .end()
+            .finish();
+
+    Template template =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .templates()
+            .byKey("create");
+
+    assertThatCode(() -> template.assertThatProperty("foo", hasValue(true)))
+        .doesNotThrowAnyException();
+
+    assertThatCode(() -> template.assertThatProperty("foo", it -> it.hasValue(false)))
+        .isInstanceOf(AssertionError.class)
+        .hasMessage("Property value expected:<false> but was:<true>");
+  }
+
   @Controller
   public static class MyController {
 

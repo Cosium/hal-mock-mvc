@@ -14,7 +14,7 @@ public class TemplatePropertyAsserts {
     return propertyAssert -> propertyAssert.hasRequired(expected);
   }
 
-  public static Consumer<TemplatePropertyAssert> hasValue(@Nullable String expected) {
+  public static Consumer<TemplatePropertyAssert> hasValue(@Nullable Object expected) {
     return propertyAssert -> propertyAssert.hasValue(expected);
   }
 
