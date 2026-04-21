@@ -1,7 +1,6 @@
 package com.cosium.hal_mock_mvc;
 
 import static java.util.Objects.requireNonNull;
-import static org.springframework.test.util.AssertionErrors.fail;
 
 import java.net.URI;
 import java.util.function.Consumer;
@@ -121,11 +120,7 @@ public class Template implements SubmittableTemplate {
   public final Template assertThatProperty(
       String propertyName, Consumer<TemplatePropertyAssert>... consumers) {
     TemplatePropertyRepresentation property = representation.propertyByName().get(propertyName);
-    if (property == null) {
-      fail("No property found for name <%s>".formatted(propertyName));
-      return this;
-    }
-    TemplatePropertyAssert propertyAssert = new TemplatePropertyAssert(property);
+    TemplatePropertyAssert propertyAssert = new TemplatePropertyAssert(propertyName, property);
     Stream.of(consumers).forEach(consumer -> consumer.accept(propertyAssert));
     return this;
   }
