@@ -1,6 +1,7 @@
 package com.cosium.hal_mock_mvc;
 
 import static com.cosium.hal_mock_mvc.TemplateAsserts.hasTitle;
+import static com.cosium.hal_mock_mvc.TemplatePropertyAsserts.exists;
 import static com.cosium.hal_mock_mvc.TemplatePropertyAsserts.hasMax;
 import static com.cosium.hal_mock_mvc.TemplatePropertyAsserts.hasMaxLength;
 import static com.cosium.hal_mock_mvc.TemplatePropertyAsserts.hasMin;
@@ -636,6 +637,50 @@ class TemplateAssertionTest {
     assertThatCode(() -> template.assertThatProperty("foo", it -> it.hasValue(false)))
         .isInstanceOf(AssertionError.class)
         .hasMessage("Property value expected:<false> but was:<true>");
+  }
+
+  @Test
+  @DisplayName("Assert on property existence")
+  void test15() throws Exception {
+
+    myController.getResponseToSend =
+        JSON.std
+            .composeString()
+            .startObject()
+            .startObjectProperty("_links")
+            .startObjectProperty("self")
+            .put("href", "http://localhost/template-assertion-test:put")
+            .end()
+            .end()
+            .startObjectProperty("_templates")
+            .startObjectProperty("create")
+            .put("method", "PUT")
+            .startArrayProperty("properties")
+            .startObject()
+            .put("name", "foo")
+            .end()
+            .end()
+            .end()
+            .end()
+            .end()
+            .finish();
+
+    Template template =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .templates()
+            .byKey("create");
+
+    assertThatCode(() -> template.assertThatProperty("foo", exists(true)))
+        .doesNotThrowAnyException();
+    assertThatCode(() -> template.assertThatProperty("bar", exists(false)))
+        .doesNotThrowAnyException();
+
+    assertThatCode(() -> template.assertThatProperty("bar", it -> it.exists(true)))
+        .isInstanceOf(AssertionError.class)
+        .hasMessage("Property exists expected:<true> but was:<false>");
   }
 
   @Controller

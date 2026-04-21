@@ -57,4 +57,8 @@ public class TemplatePropertyAsserts {
   public static Consumer<TemplatePropertyAssert> hasStep(@Nullable Double expected) {
     return propertyAssert -> propertyAssert.hasStep(expected);
   }
+
+  public static Consumer<TemplatePropertyAssert> exists(boolean expected) {
+    return propertyAssert -> propertyAssert.exists(expected);
+  }
 }
