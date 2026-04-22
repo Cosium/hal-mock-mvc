@@ -60,16 +60,19 @@ public class HalMockMvc {
   private final MockMvc mockMvc;
   private final String baseUri;
   private final List<RequestPostProcessor> requestPostProcessors;
+  private final List<RelationsRequestPostProcessor> relationsRequestPostProcessors;
   private final HttpHeaders headers;
 
   private HalMockMvc(
       MockMvc mockMvc,
       String baseUri,
       List<RequestPostProcessor> requestPostProcessors,
+      List<RelationsRequestPostProcessor> relationsRequestPostProcessors,
       HttpHeaders headers) {
     this.mockMvc = requireNonNull(mockMvc);
     this.baseUri = requireNonNull(baseUri);
     this.requestPostProcessors = List.copyOf(requestPostProcessors);
+    this.relationsRequestPostProcessors = requireNonNull(relationsRequestPostProcessors);
     this.headers = HttpHeaders.copyOf(headers);
   }
 
@@ -86,12 +89,22 @@ public class HalMockMvc {
   }
 
   public TraversalBuilder follow(String... relations) {
-    return new TraversalBuilder(mockMvc, baseUri, requestPostProcessors, new HttpHeaders(headers))
+    return new TraversalBuilder(
+            mockMvc,
+            baseUri,
+            requestPostProcessors,
+            relationsRequestPostProcessors,
+            new HttpHeaders(headers))
         .follow(relations);
   }
 
   public TraversalBuilder follow(Hop relation) {
-    return new TraversalBuilder(mockMvc, baseUri, requestPostProcessors, new HttpHeaders(headers))
+    return new TraversalBuilder(
+            mockMvc,
+            baseUri,
+            requestPostProcessors,
+            relationsRequestPostProcessors,
+            new HttpHeaders(headers))
         .follow(relation);
   }
 
@@ -108,9 +121,12 @@ public class HalMockMvc {
     private TraversalBuilder(
         MockMvc mockMvc,
         String baseUri,
-        List<RequestPostProcessor> postProcessors,
+        List<RequestPostProcessor> requestPostProcessors,
+        List<RelationsRequestPostProcessor> relationsRequestPostProcessors,
         HttpHeaders httpHeaders) {
-      this.requestExecutor = new RequestExecutor(mockMvc, postProcessors, httpHeaders);
+      this.requestExecutor =
+          new RequestExecutor(
+              mockMvc, requestPostProcessors, relationsRequestPostProcessors, httpHeaders);
       this.baseUri = baseUri;
     }
 
@@ -225,8 +241,8 @@ public class HalMockMvc {
       URI targetUri = URI.create(baseUri);
       for (Hop hop : hops) {
 
-        ResultActions requestResult =
-            requestExecutor.execute(MockMvcRequestBuilders.get(targetUri));
+        String relationName = hop.relationName();
+        ResultActions requestResult = requestExecutor.fetchRelations(targetUri, relationName);
         requestResult.andExpect(contentTypeIsCompatibleWithHal());
 
         MockHttpServletResponse response = requestResult.andReturn().getResponse();
@@ -243,7 +259,7 @@ public class HalMockMvc {
                   + "'");
         }
 
-        Link link = halLinkDiscoverer.findLinkWithRel(hop.relationName(), body).orElse(null);
+        Link link = halLinkDiscoverer.findLinkWithRel(relationName, body).orElse(null);
         if (link == null) {
           throw new IllegalArgumentException(
               "Could not find relation "
@@ -264,10 +280,11 @@ public class HalMockMvc {
     private final MockMvc mockMvc;
     private String baseUri;
     private final List<RequestPostProcessor> requestPostProcessors;
+    private final List<RelationsRequestPostProcessor> relationsRequestPostProcessors;
     private final HttpHeaders headers;
 
     private Builder(MockMvc mockMvc) {
-      this(mockMvc, DEFAULT_BASE_URI, List.of(), new HttpHeaders());
+      this(mockMvc, DEFAULT_BASE_URI, List.of(), List.of(), new HttpHeaders());
     }
 
     private Builder(HalMockMvc halMockMvc) {
@@ -275,6 +292,7 @@ public class HalMockMvc {
           halMockMvc.mockMvc,
           halMockMvc.baseUri,
           halMockMvc.requestPostProcessors,
+          halMockMvc.relationsRequestPostProcessors,
           halMockMvc.headers);
     }
 
@@ -282,10 +300,12 @@ public class HalMockMvc {
         MockMvc mockMvc,
         String baseUri,
         List<RequestPostProcessor> requestPostProcessors,
+        List<RelationsRequestPostProcessor> relationsRequestPostProcessors,
         HttpHeaders headers) {
       this.mockMvc = mockMvc;
       this.baseUri = baseUri;
       this.requestPostProcessors = new ArrayList<>(requestPostProcessors);
+      this.relationsRequestPostProcessors = new ArrayList<>(relationsRequestPostProcessors);
       this.headers = HttpHeaders.copyOf(headers);
     }
 
@@ -305,14 +325,47 @@ public class HalMockMvc {
       return this;
     }
 
+    /**
+     * Adds a post-processor that will be applied to any request emitted by the built {@link
+     * HalMockMvc}.
+     */
     public Builder addRequestPostProcessor(RequestPostProcessor requestPostProcessor) {
       requestPostProcessors.add(requestPostProcessor);
       return this;
     }
 
+    /**
+     * @see #addRequestPostProcessor(RequestPostProcessor)
+     */
     public Builder requestPostProcessors(List<RequestPostProcessor> requestPostProcessors) {
       this.requestPostProcessors.clear();
       this.requestPostProcessors.addAll(requestPostProcessors);
+      return this;
+    }
+
+    /**
+     * Adds a post-processor specific to any relations-fetching request emitted by the built {@link
+     * HalMockMvc}.
+     *
+     * <p>A relations-fetching request will be first post-processed by the list of {@link
+     * RequestPostProcessor} then finally post-processed by the list of {@link
+     * RelationsRequestPostProcessor}.
+     *
+     * @see #addRequestPostProcessor(RequestPostProcessor)
+     */
+    public Builder addRelationsRequestPostProcessor(
+        RelationsRequestPostProcessor relationsRequestPostProcessor) {
+      relationsRequestPostProcessors.add(relationsRequestPostProcessor);
+      return this;
+    }
+
+    /**
+     * @see #addRelationsRequestPostProcessor(RelationsRequestPostProcessor)
+     */
+    public Builder relationsRequestPostProcessors(
+        List<RelationsRequestPostProcessor> relationsRequestPostProcessor) {
+      this.relationsRequestPostProcessors.clear();
+      this.relationsRequestPostProcessors.addAll(relationsRequestPostProcessor);
       return this;
     }
 
@@ -332,7 +385,8 @@ public class HalMockMvc {
     }
 
     public HalMockMvc build() {
-      return new HalMockMvc(mockMvc, baseUri, requestPostProcessors, headers);
+      return new HalMockMvc(
+          mockMvc, baseUri, requestPostProcessors, relationsRequestPostProcessors, headers);
     }
   }
 }
