@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.RepresentationModel;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.MockMvc;
@@ -64,7 +65,7 @@ class HalMockMvcTest {
   @DisplayName("HalMockMvc produces HAL representation")
   void test2() throws Exception {
     HalMockMvc.builder(mockMvc)
-        .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+        .baseUri(linkTo(methodOn(MyController.class).get(null)).toUri())
         .build()
         .follow("collection")
         .get()
@@ -129,27 +130,55 @@ class HalMockMvcTest {
         .andExpect(jsonPath("$.value").value("man"));
   }
 
+  @Test
+  @DisplayName("RelationsRequestPostProcessors are considered")
+  void test7() throws Exception {
+    HalMockMvc.builder(mockMvc)
+        .baseUri(linkTo(methodOn(MyController.class).get(null)).toUri())
+        .addRelationsRequestPostProcessor(
+            (request, desiredRelations) -> {
+              request.addHeader("Desired-Relations", desiredRelations);
+              return request;
+            })
+        .build()
+        .follow("collection")
+        .get()
+        .andExpect(status().isOk());
+
+    assertThat(myController.headersReceivedByGet.get("Desired-Relations"))
+        .containsExactly("collection");
+    assertThat(myController.headersReceivedByGetCollection.containsHeader("Desired-Relations"))
+        .isFalse();
+  }
+
   @Controller
   @RequestMapping("/HalMockMvcTest")
   public static class MyController {
 
     private final AtomicBoolean getDeleteCalled = new AtomicBoolean();
     private final Map<String, MultipartFile> fileById = new HashMap<>();
+    private HttpHeaders headersReceivedByGet;
+    private HttpHeaders headersReceivedByGetCollection;
 
     private void reset() {
       getDeleteCalled.set(false);
       fileById.clear();
+      headersReceivedByGet = null;
+      headersReceivedByGetCollection = null;
     }
 
     @GetMapping
-    public ResponseEntity<?> get() {
+    public ResponseEntity<?> get(@RequestHeader HttpHeaders headers) {
+      headersReceivedByGet = headers;
       return ResponseEntity.ok(
           new RepresentationModel<>(
-              List.of(linkTo(methodOn(MyController.class).getCollection()).withRel("collection"))));
+              List.of(
+                  linkTo(methodOn(MyController.class).getCollection(null)).withRel("collection"))));
     }
 
     @GetMapping("/collection")
-    public ResponseEntity<?> getCollection() {
+    public ResponseEntity<?> getCollection(@RequestHeader HttpHeaders headers) {
+      headersReceivedByGetCollection = headers;
       return ResponseEntity.ok(
           CollectionModel.of(Collections.singleton(Collections.singletonMap("name", "foo"))));
     }
