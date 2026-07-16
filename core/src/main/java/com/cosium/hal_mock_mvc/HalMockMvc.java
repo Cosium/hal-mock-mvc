@@ -259,16 +259,20 @@ public class HalMockMvc {
                   + "'");
         }
 
-        Link link = halLinkDiscoverer.findLinkWithRel(relationName, body).orElse(null);
-        if (link == null) {
+        List<Link> links = halLinkDiscoverer.findLinksWithRel(relationName, body).toList();
+        if (links.isEmpty()) {
           throw new IllegalArgumentException(
-              "Could not find relation "
-                  + hop
-                  + " at URI "
-                  + requestResult.andReturn().getRequest().getRequestURI());
+              "Could not find link for %s at URI <%s>"
+                  .formatted(hop, requestResult.andReturn().getRequest().getRequestURI()));
         }
-
-        targetUri = link.expand(hop.parameters()).toUri();
+        int linkCount = links.size();
+        if (linkCount > 1) {
+          throw new IllegalArgumentException(
+              "Found <%d> links for %s at URI <%s>"
+                  .formatted(
+                      linkCount, hop, requestResult.andReturn().getRequest().getRequestURI()));
+        }
+        targetUri = links.stream().findFirst().orElseThrow().expand(hop.parameters()).toUri();
       }
 
       return targetUri;

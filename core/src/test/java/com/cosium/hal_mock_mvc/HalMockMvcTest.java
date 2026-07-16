@@ -1,6 +1,7 @@
 package com.cosium.hal_mock_mvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -151,6 +152,22 @@ class HalMockMvcTest {
         .isFalse();
   }
 
+  @Test
+  @DisplayName("Following a relation associated to more than 1 link fails")
+  void test8() {
+
+    HalMockMvc.TraversalBuilder traversalBuilder =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).getDuplicateLinks()).toUri())
+            .build()
+            .follow("foo");
+
+    assertThatThrownBy(traversalBuilder::get)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            "Found <2> links for Hop[relationName='foo', parameters={}] at URI </HalMockMvcTest/duplicate-links>");
+  }
+
   @Controller
   @RequestMapping("/HalMockMvcTest")
   public static class MyController {
@@ -204,6 +221,15 @@ class HalMockMvcTest {
     @GetMapping("/yo-header")
     public ResponseEntity<?> getYoHeaderValue(@RequestHeader("yo") String yoValue) {
       return ResponseEntity.ok(Map.of("value", yoValue));
+    }
+
+    @GetMapping("/duplicate-links")
+    public ResponseEntity<?> getDuplicateLinks() {
+      return ResponseEntity.ok(
+          new RepresentationModel<>(
+              List.of(
+                  linkTo(methodOn(MyController.class).getCollection(null)).withRel("foo"),
+                  linkTo(methodOn(MyController.class).get(null)).withRel("foo"))));
     }
   }
 }
