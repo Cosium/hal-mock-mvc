@@ -1,5 +1,6 @@
 package com.cosium.hal_mock_mvc;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -17,6 +18,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.shadow.de.siegmar.fastcsv.util.Nullable;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpHeaders;
@@ -168,6 +172,41 @@ class HalMockMvcTest {
             "Found <2> links for Hop[relationName='foo', parameters={}] at URI </HalMockMvcTest/duplicate-links>");
   }
 
+  @ParameterizedTest
+  @ValueSource(ints = {300, 301, 302, 303, 307, 308})
+  @DisplayName("Redirections are followed on get")
+  void test9(int redirectStatusCode) throws Exception {
+
+    HalMockMvc.builder(mockMvc)
+        .baseUri(linkTo(methodOn(MyController.class).get(null)).toUri())
+        .build()
+        .follow(
+            Hop.relation("collection-through-redirect")
+                .withParameter("redirectStatusCode", redirectStatusCode))
+        .get()
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$._embedded.singletonMapList.length()").value(1))
+        .andExpect(jsonPath("$._embedded.singletonMapList[0].name").value("foo"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {300, 301, 302, 303, 307, 308})
+  @DisplayName("Redirections are followed during hops")
+  void test10(int redirectStatusCode) throws Exception {
+
+    HalMockMvc.builder(mockMvc)
+        .baseUri(linkTo(methodOn(MyController.class).get(null)).toUri())
+        .build()
+        .follow(
+            Hop.relation("index-through-redirect")
+                .withParameter("redirectStatusCode", redirectStatusCode))
+        .follow("collection")
+        .get()
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$._embedded.singletonMapList.length()").value(1))
+        .andExpect(jsonPath("$._embedded.singletonMapList[0].name").value("foo"));
+  }
+
   @Controller
   @RequestMapping("/HalMockMvcTest")
   public static class MyController {
@@ -190,7 +229,11 @@ class HalMockMvcTest {
       return ResponseEntity.ok(
           new RepresentationModel<>(
               List.of(
-                  linkTo(methodOn(MyController.class).getCollection(null)).withRel("collection"))));
+                  linkTo(methodOn(MyController.class).getCollection(null)).withRel("collection"),
+                  linkTo(methodOn(MyController.class).redirectToIndex(null))
+                      .withRel("index-through-redirect"),
+                  linkTo(methodOn(MyController.class).redirectToCollection(null))
+                      .withRel("collection-through-redirect"))));
     }
 
     @GetMapping("/collection")
@@ -230,6 +273,28 @@ class HalMockMvcTest {
               List.of(
                   linkTo(methodOn(MyController.class).getCollection(null)).withRel("foo"),
                   linkTo(methodOn(MyController.class).get(null)).withRel("foo"))));
+    }
+
+    @GetMapping("/redirect-to-collection")
+    public ResponseEntity<?> redirectToCollection(
+        @RequestParam("redirectStatusCode") @Nullable Integer redirectStatusCode) {
+
+      requireNonNull(redirectStatusCode);
+
+      return ResponseEntity.status(redirectStatusCode)
+          .location(linkTo(methodOn(MyController.class).getCollection(null)).toUri())
+          .build();
+    }
+
+    @GetMapping("/redirect-to-index")
+    public ResponseEntity<?> redirectToIndex(
+        @RequestParam("redirectStatusCode") @Nullable Integer redirectStatusCode) {
+
+      requireNonNull(redirectStatusCode);
+
+      return ResponseEntity.status(redirectStatusCode)
+          .location(linkTo(methodOn(MyController.class).get(null)).toUri())
+          .build();
     }
   }
 }
