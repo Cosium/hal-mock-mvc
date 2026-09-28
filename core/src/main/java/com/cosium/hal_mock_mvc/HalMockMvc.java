@@ -18,8 +18,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 /**
- *
- *
  * <h3>HAL links browsing</h3>
  *
  * <pre>{@code
