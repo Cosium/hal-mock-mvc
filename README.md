@@ -145,18 +145,16 @@ halMockMvc
     .assertThatProperty("name", hasRequired(true));
 ```
 
-Reach the templates of embedded resources, a single one (`_embedded.owner`) or an array (`_embedded.content`):
+Fetch a resource once with `fetchResource()`, then reach its templates and those of its embedded resources, a single one (`_embedded.owner`) or an array (`_embedded.content`):
 
 ```java
-halMockMvc
-    .follow()
-    .embedded("owner")
-    .templates()
-    .byKey("update")
-    .assertThat(hasMethod("PUT"));
+HalFormsResource resource = halMockMvc.follow().fetchResource();
 
-halMockMvc
-    .follow()
+resource.templates().byKey("create").assertThat(hasMethod("POST"));
+
+resource.embedded("owner").templates().byKey("update").assertThat(hasMethod("PUT"));
+
+resource
     .embeddedList("content")
     .stream()
     .filter(item -> item.selfHref().equals(itemHref))

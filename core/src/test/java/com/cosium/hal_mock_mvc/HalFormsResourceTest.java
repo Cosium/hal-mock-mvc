@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.PutMapping;
  * @author Réda Housni Alaoui
  */
 @HalMockMvcBootTest
-class EmbeddedResourceTest {
+class HalFormsResourceTest {
 
   @Inject private MyController myController;
   @Inject private MockMvc mockMvc;
@@ -41,15 +41,15 @@ class EmbeddedResourceTest {
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
           "_embedded": {
             "content": [
               {
-                "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}},
+                "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:item"}},
                 "_templates": {"update": {"method": "PUT"}}
               },
               {
-                "_links": {"self": {"href": "http://localhost/embedded-resource-test:other-item"}},
+                "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:other-item"}},
                 "_templates": {"delete": {"method": "DELETE"}}
               }
             ]
@@ -57,18 +57,19 @@ class EmbeddedResourceTest {
         }
         """;
 
-    List<EmbeddedResource> embeddedResources =
+    List<HalFormsResource> embeddedResources =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .embeddedList("content");
 
     assertThat(embeddedResources)
-        .extracting(EmbeddedResource::selfHref)
+        .extracting(HalFormsResource::selfHref)
         .containsExactly(
-            "http://localhost/embedded-resource-test:item",
-            "http://localhost/embedded-resource-test:other-item");
+            "http://localhost/hal-forms-resource-test:item",
+            "http://localhost/hal-forms-resource-test:other-item");
     Templates firstTemplates = embeddedResources.get(0).templates();
     firstTemplates.byKey("update").assertThat(hasMethod("PUT"));
     assertThat(firstTemplates.byOptionalKey("delete")).isEmpty();
@@ -84,25 +85,26 @@ class EmbeddedResourceTest {
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
           "_embedded": {
             "owner": {
-              "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}},
+              "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:item"}},
               "_templates": {"update": {"method": "PUT"}}
             }
           }
         }
         """;
 
-    EmbeddedResource embeddedResource =
+    HalFormsResource embeddedResource =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .embedded("owner");
 
     assertThat(embeddedResource.selfHref())
-        .isEqualTo("http://localhost/embedded-resource-test:item");
+        .isEqualTo("http://localhost/hal-forms-resource-test:item");
     embeddedResource.templates().byKey("update").assertThat(hasMethod("PUT"));
   }
 
@@ -113,10 +115,10 @@ class EmbeddedResourceTest {
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
           "_embedded": {
             "owner": {
-              "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}},
+              "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:item"}},
               "_templates": {"update": {"method": "PUT"}}
             }
           }
@@ -127,6 +129,7 @@ class EmbeddedResourceTest {
         .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
         .build()
         .follow()
+        .fetchResource()
         .embedded("owner")
         .templates()
         .byKey("update")
@@ -143,24 +146,25 @@ class EmbeddedResourceTest {
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
           "_embedded": {
             "content": [
               {
-                "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}}
+                "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:item"}}
               }
             ]
           }
         }
         """;
 
-    HalMockMvc.TraversalBuilder traversal =
+    HalFormsResource resource =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
-            .follow();
+            .follow()
+            .fetchResource();
 
-    assertThatThrownBy(() -> traversal.embedded("content"))
+    assertThatThrownBy(() -> resource.embedded("content"))
         .isInstanceOf(AssertionError.class)
         .hasMessage("Embedded relation <content> is <ARRAY> instead of <OBJECT>");
   }
@@ -172,22 +176,23 @@ class EmbeddedResourceTest {
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
           "_embedded": {
             "owner": {
-              "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}}
+              "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:item"}}
             }
           }
         }
         """;
 
-    HalMockMvc.TraversalBuilder traversal =
+    HalFormsResource resource =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
-            .follow();
+            .follow()
+            .fetchResource();
 
-    assertThatThrownBy(() -> traversal.embeddedList("owner"))
+    assertThatThrownBy(() -> resource.embeddedList("owner"))
         .isInstanceOf(AssertionError.class)
         .hasMessage("Embedded relation <owner> is <OBJECT> instead of <ARRAY>");
   }
@@ -199,17 +204,18 @@ class EmbeddedResourceTest {
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}}
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}}
         }
         """;
 
-    HalMockMvc.TraversalBuilder traversal =
+    HalFormsResource resource =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
-            .follow();
+            .follow()
+            .fetchResource();
 
-    assertThatThrownBy(() -> traversal.embedded("owner"))
+    assertThatThrownBy(() -> resource.embedded("owner"))
         .isInstanceOf(NoSuchElementException.class)
         .hasMessage("No embedded resource found for relation <owner>");
   }
@@ -221,40 +227,74 @@ class EmbeddedResourceTest {
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
           "_embedded": {"owner": {"name": "John"}}
         }
         """;
 
-    EmbeddedResource embeddedResource =
+    HalFormsResource embeddedResource =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .embedded("owner");
 
     assertThatThrownBy(embeddedResource::selfHref)
         .isInstanceOf(NoSuchElementException.class)
-        .hasMessage("_links.self.href is missing from the embedded resource");
+        .hasMessage("_links.self.href is missing from the resource");
+  }
+
+  @Test
+  @DisplayName("Fetch the final endpoint once for its templates and its embedded resources")
+  void test8() throws Exception {
+
+    myController.getResponseToSend =
+        """
+        {
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
+          "_templates": {"create": {"method": "POST"}},
+          "_embedded": {
+            "owner": {
+              "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:item"}},
+              "_templates": {"update": {"method": "PUT"}}
+            }
+          }
+        }
+        """;
+
+    HalFormsResource resource =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .fetchResource();
+
+    resource.templates().byKey("create").assertThat(hasMethod("POST"));
+    resource.embedded("owner").templates().byKey("update").assertThat(hasMethod("PUT"));
+    assertThat(myController.getCount).isEqualTo(1);
   }
 
   @Controller
   public static class MyController {
 
     private String getResponseToSend;
+    private int getCount;
     private int itemPutCount;
 
     void reset() {
       getResponseToSend = null;
+      getCount = 0;
       itemPutCount = 0;
     }
 
-    @GetMapping(value = "embedded-resource-test:get", produces = MediaTypes.HAL_FORMS_JSON_VALUE)
+    @GetMapping(value = "hal-forms-resource-test:get", produces = MediaTypes.HAL_FORMS_JSON_VALUE)
     public ResponseEntity<?> get() {
+      getCount++;
       return ResponseEntity.ok(getResponseToSend);
     }
 
-    @PutMapping("embedded-resource-test:item")
+    @PutMapping("hal-forms-resource-test:item")
     public ResponseEntity<?> putItem() {
       itemPutCount++;
       return ResponseEntity.noContent().build();
