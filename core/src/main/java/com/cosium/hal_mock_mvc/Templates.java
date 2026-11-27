@@ -3,9 +3,11 @@ package com.cosium.hal_mock_mvc;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -63,16 +65,22 @@ public class Templates {
 
     @JsonCreator
     public HalFormsBody(
-        @JsonProperty("_links") Map<String, Link> linkByName,
+        @JsonProperty("_links") @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+            Map<String, List<Link>> linksByRelation,
         @JsonProperty("_templates") Map<String, TemplateRepresentation> templateByKey) {
-      baseUri =
-          Optional.ofNullable(linkByName)
-              .map(linkByNameMap -> linkByNameMap.get("self"))
-              .map(Link::href)
-              .orElseThrow(
-                  () ->
-                      new NoSuchElementException(
-                          "_link.self is missing from the HAL forms representation"));
+
+      List<Link> selfLinks =
+          Optional.ofNullable(linksByRelation)
+              .map(linksByRelationMap -> linksByRelationMap.get("self"))
+              .orElseGet(List::of);
+      if (selfLinks.isEmpty()) {
+        throw new NoSuchElementException("_link.self is missing from the HAL forms representation");
+      }
+      if (selfLinks.size() > 1) {
+        throw new AssertionError(
+            "Resource has <%s> self links instead of <1>".formatted(selfLinks.size()));
+      }
+      baseUri = selfLinks.get(0).href();
 
       this.templateByKey =
           Optional.ofNullable(templateByKey)
