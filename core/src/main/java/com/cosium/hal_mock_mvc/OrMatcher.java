@@ -3,6 +3,9 @@ package com.cosium.hal_mock_mvc;
 /**
  * @author Réda Housni Alaoui
  */
+import static java.util.stream.Collectors.joining;
+
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -23,22 +26,23 @@ class OrMatcher implements ResultMatcher {
   }
 
   @Override
-  public void match(MvcResult result) throws Exception {
-    Exception exception = null;
+  public void match(MvcResult result) {
+    List<Throwable> failures = new ArrayList<>();
     for (ResultMatcher matcher : matchers) {
       try {
         matcher.match(result);
         return;
-      } catch (Exception e) {
-        if (exception == null) {
-          exception = new Exception();
-        }
-        exception.addSuppressed(e);
+      } catch (Exception | AssertionError e) {
+        failures.add(e);
       }
     }
-    if (exception == null) {
-      exception = new Exception();
-    }
-    throw exception;
+
+    AssertionError error =
+        new AssertionError(
+            failures.stream()
+                .map(Throwable::getMessage)
+                .collect(joining("\n- ", "None of the matchers matched:\n- ", "")));
+    failures.forEach(error::addSuppressed);
+    throw error;
   }
 }
