@@ -313,7 +313,10 @@ class HalFormsResourceTest {
     assertThatThrownBy(traversal::fetchResource)
         .isInstanceOf(AssertionError.class)
         .hasMessage(
-            "Range for response status value 404 expected:<SUCCESSFUL> but was:<CLIENT_ERROR>");
+            """
+            None of the matchers matched:
+            - Range for response status value 404 expected:<SUCCESSFUL> but was:<CLIENT_ERROR>
+            - Range for response status value 404 expected:<REDIRECTION> but was:<CLIENT_ERROR>""");
   }
 
   @Test
