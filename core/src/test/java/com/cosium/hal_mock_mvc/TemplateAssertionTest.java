@@ -73,6 +73,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -115,6 +116,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -158,6 +160,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -201,6 +204,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -244,6 +248,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -287,6 +292,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -330,6 +336,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -373,6 +380,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -416,6 +424,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -458,6 +467,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -500,6 +510,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -543,6 +554,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -586,6 +598,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -629,6 +642,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -671,6 +685,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 
@@ -710,6 +725,7 @@ class TemplateAssertionTest {
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
+            .fetchResource()
             .templates()
             .byKey("create");
 

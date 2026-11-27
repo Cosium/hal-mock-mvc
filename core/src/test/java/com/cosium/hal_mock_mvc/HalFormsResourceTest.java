@@ -275,6 +275,29 @@ class HalFormsResourceTest {
     assertThat(myController.getCount).isEqualTo(1);
   }
 
+  @Test
+  @DisplayName("Get the templates of the final endpoint from the deprecated traversal templates()")
+  @SuppressWarnings("deprecation")
+  void test9() throws Exception {
+
+    myController.getResponseToSend =
+        """
+        {
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
+          "_templates": {"create": {"method": "POST"}}
+        }
+        """;
+
+    Templates templates =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .templates();
+
+    templates.byKey("create").assertThat(hasMethod("POST"));
+  }
+
   @Controller
   public static class MyController {
 
