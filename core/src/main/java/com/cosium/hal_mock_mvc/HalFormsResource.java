@@ -23,14 +23,24 @@ public class HalFormsResource {
   }
 
   /**
-   * @return The href of the resource's self link
+   * @return The href of the resource's self link, rendered as a link object or as an array holding
+   *     a single link object
    */
   public String selfHref() {
-    JsonNode selfHref = resource.at("/_links/self/href");
-    if (selfHref.isString()) {
-      return selfHref.asString();
+    List<String> selfHrefs =
+        findSelfLinks().stream()
+            .map(selfLink -> selfLink.path("href"))
+            .filter(JsonNode::isString)
+            .map(JsonNode::asString)
+            .toList();
+    if (selfHrefs.isEmpty()) {
+      throw new NoSuchElementException("_links.self.href is missing from the resource");
     }
-    throw new NoSuchElementException("_links.self.href is missing from the resource");
+    if (selfHrefs.size() > 1) {
+      throw new AssertionError(
+          "Resource has <%d> self links instead of <1>".formatted(selfHrefs.size()));
+    }
+    return selfHrefs.get(0);
   }
 
   /**
@@ -69,6 +79,17 @@ public class HalFormsResource {
     throw new AssertionError(
         "Embedded relation <%s> is <%s> instead of <%s>"
             .formatted(relation, embeddedResources.getNodeType(), JsonNodeType.ARRAY));
+  }
+
+  private List<JsonNode> findSelfLinks() {
+    JsonNode self = resource.path("_links").path("self");
+    if (self.isArray()) {
+      return self.valueStream().toList();
+    }
+    if (self.isMissingNode()) {
+      return List.of();
+    }
+    return List.of(self);
   }
 
   private JsonNode findEmbedded(String relation) {

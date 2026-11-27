@@ -332,6 +332,68 @@ class HalFormsResourceTest {
             "Content type expected:<application/prs.hal-forms+json> but was:<application/hal+json>");
   }
 
+  @Test
+  @DisplayName("Get the self href of an embedded resource rendering its self link as an array")
+  void test12() throws Exception {
+
+    myController.getResponseToSend =
+        """
+        {
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
+          "_embedded": {
+            "owner": {
+              "_links": {"self": [{"href": "http://localhost/hal-forms-resource-test:item"}]}
+            }
+          }
+        }
+        """;
+
+    HalFormsResource embeddedResource =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .fetchResource()
+            .embedded("owner");
+
+    assertThat(embeddedResource.selfHref())
+        .isEqualTo("http://localhost/hal-forms-resource-test:item");
+  }
+
+  @Test
+  @DisplayName("Get the self href of an embedded resource with several self links")
+  void test13() throws Exception {
+
+    myController.getResponseToSend =
+        """
+        {
+          "_links": {"self": {"href": "http://localhost/hal-forms-resource-test:get"}},
+          "_embedded": {
+            "owner": {
+              "_links": {
+                "self": [
+                  {"href": "http://localhost/hal-forms-resource-test:item"},
+                  {"href": "http://localhost/hal-forms-resource-test:other-item"}
+                ]
+              }
+            }
+          }
+        }
+        """;
+
+    HalFormsResource embeddedResource =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .fetchResource()
+            .embedded("owner");
+
+    assertThatThrownBy(embeddedResource::selfHref)
+        .isInstanceOf(AssertionError.class)
+        .hasMessage("Resource has <2> self links instead of <1>");
+  }
+
   @Controller
   public static class MyController {
 
