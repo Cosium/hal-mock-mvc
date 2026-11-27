@@ -1,13 +1,18 @@
 package com.cosium.hal_mock_mvc;
 
 import static com.cosium.hal_mock_mvc.HalCompatibleContentTypeMatcher.contentTypeIsCompatibleWithHal;
+import static com.cosium.hal_mock_mvc.OrMatcher.anyOf;
 import static java.util.Objects.requireNonNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.client.LinkDiscoverer;
 import org.springframework.hateoas.mediatype.hal.forms.HalFormsLinkDiscoverer;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +21,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.JsonNodeType;
 
 /**
  * <h3>HAL links browsing</h3>
@@ -142,7 +150,38 @@ public class HalMockMvc {
      * @return The HAL-FORMS templates provided by the final endpoint.
      */
     public Templates templates() throws Exception {
-      return new Templates(requestExecutor, get());
+      return new Templates(requestExecutor, fetchHalFormsResource());
+    }
+
+    /**
+     * @param relation The relation of a single resource embedded in the final endpoint
+     * @return The embedded resource
+     */
+    public EmbeddedResource embedded(String relation) throws Exception {
+      JsonNode embeddedResource = fetchEmbedded(relation);
+      if (embeddedResource.isObject()) {
+        return new EmbeddedResource(requestExecutor, embeddedResource);
+      }
+      throw new AssertionError(
+          "Embedded relation <%s> is <%s> instead of <%s>"
+              .formatted(relation, embeddedResource.getNodeType(), JsonNodeType.OBJECT));
+    }
+
+    /**
+     * @param relation The relation of an array of resources embedded in the final endpoint
+     * @return The embedded resources, in the array order
+     */
+    public List<EmbeddedResource> embeddedList(String relation) throws Exception {
+      JsonNode embeddedResources = fetchEmbedded(relation);
+      if (embeddedResources.isArray()) {
+        return embeddedResources
+            .valueStream()
+            .map(embeddedResource -> new EmbeddedResource(requestExecutor, embeddedResource))
+            .toList();
+      }
+      throw new AssertionError(
+          "Embedded relation <%s> is <%s> instead of <%s>"
+              .formatted(relation, embeddedResources.getNodeType(), JsonNodeType.ARRAY));
     }
 
     /**
@@ -233,6 +272,24 @@ public class HalMockMvc {
      */
     public ResultActions delete() throws Exception {
       return request().delete();
+    }
+
+    private JsonNode fetchEmbedded(String relation) throws Exception {
+      JsonNode embedded = fetchHalFormsResource().path("_embedded").path(relation);
+      if (!embedded.isMissingNode()) {
+        return embedded;
+      }
+      throw new NoSuchElementException(
+          "No embedded resource found for relation <%s>".formatted(relation));
+    }
+
+    private JsonNode fetchHalFormsResource() throws Exception {
+      ResultActions resultActions =
+          get()
+              .andExpect(anyOf(status().is2xxSuccessful(), status().is3xxRedirection()))
+              .andExpect(content().contentType(MediaTypes.HAL_FORMS_JSON));
+      return JsonMapper.shared()
+          .readTree(resultActions.andReturn().getResponse().getContentAsString());
     }
 
     private URI fetchTargetUri() throws Exception {

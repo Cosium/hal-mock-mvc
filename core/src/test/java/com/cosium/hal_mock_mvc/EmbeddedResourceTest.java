@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.PutMapping;
  * @author Réda Housni Alaoui
  */
 @HalMockMvcBootTest
-class EmbeddedTemplatesTest {
+class EmbeddedResourceTest {
 
   @Inject private MyController myController;
   @Inject private MockMvc mockMvc;
@@ -35,21 +35,21 @@ class EmbeddedTemplatesTest {
   }
 
   @Test
-  @DisplayName("List the templates of each resource of an embedded array")
+  @DisplayName("List the resources of an embedded array with their templates")
   void test1() throws Exception {
 
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-templates-test:get"}},
+          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
           "_embedded": {
             "content": [
               {
-                "_links": {"self": {"href": "http://localhost/embedded-templates-test:item"}},
+                "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}},
                 "_templates": {"update": {"method": "PUT"}}
               },
               {
-                "_links": {"self": {"href": "http://localhost/embedded-templates-test:other-item"}},
+                "_links": {"self": {"href": "http://localhost/embedded-resource-test:other-item"}},
                 "_templates": {"delete": {"method": "DELETE"}}
               }
             ]
@@ -57,53 +57,53 @@ class EmbeddedTemplatesTest {
         }
         """;
 
-    List<Templates> embeddedTemplates =
+    List<EmbeddedResource> embeddedResources =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
-            .templates()
             .embeddedList("content");
 
-    assertThat(embeddedTemplates)
-        .extracting(Templates::selfHref)
+    assertThat(embeddedResources)
+        .extracting(EmbeddedResource::selfHref)
         .containsExactly(
-            "http://localhost/embedded-templates-test:item",
-            "http://localhost/embedded-templates-test:other-item");
-    embeddedTemplates.get(0).byKey("update").assertThat(hasMethod("PUT"));
-    assertThat(embeddedTemplates.get(0).byOptionalKey("delete")).isEmpty();
-    embeddedTemplates.get(1).byKey("delete").assertThat(hasMethod("DELETE"));
-    assertThat(embeddedTemplates.get(1).byOptionalKey("update")).isEmpty();
+            "http://localhost/embedded-resource-test:item",
+            "http://localhost/embedded-resource-test:other-item");
+    Templates firstTemplates = embeddedResources.get(0).templates();
+    firstTemplates.byKey("update").assertThat(hasMethod("PUT"));
+    assertThat(firstTemplates.byOptionalKey("delete")).isEmpty();
+    Templates secondTemplates = embeddedResources.get(1).templates();
+    secondTemplates.byKey("delete").assertThat(hasMethod("DELETE"));
+    assertThat(secondTemplates.byOptionalKey("update")).isEmpty();
   }
 
   @Test
-  @DisplayName("Get the templates of a single embedded resource")
+  @DisplayName("Get a single embedded resource with its templates")
   void test2() throws Exception {
 
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-templates-test:get"}},
+          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
           "_embedded": {
             "owner": {
-              "_links": {"self": {"href": "http://localhost/embedded-templates-test:item"}},
+              "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}},
               "_templates": {"update": {"method": "PUT"}}
             }
           }
         }
         """;
 
-    Templates embeddedTemplates =
+    EmbeddedResource embeddedResource =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
-            .templates()
             .embedded("owner");
 
-    assertThat(embeddedTemplates.selfHref())
-        .isEqualTo("http://localhost/embedded-templates-test:item");
-    embeddedTemplates.byKey("update").assertThat(hasMethod("PUT"));
+    assertThat(embeddedResource.selfHref())
+        .isEqualTo("http://localhost/embedded-resource-test:item");
+    embeddedResource.templates().byKey("update").assertThat(hasMethod("PUT"));
   }
 
   @Test
@@ -113,10 +113,10 @@ class EmbeddedTemplatesTest {
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-templates-test:get"}},
+          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
           "_embedded": {
             "owner": {
-              "_links": {"self": {"href": "http://localhost/embedded-templates-test:item"}},
+              "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}},
               "_templates": {"update": {"method": "PUT"}}
             }
           }
@@ -127,8 +127,8 @@ class EmbeddedTemplatesTest {
         .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
         .build()
         .follow()
-        .templates()
         .embedded("owner")
+        .templates()
         .byKey("update")
         .submit()
         .andExpect(status().isNoContent());
@@ -137,84 +137,105 @@ class EmbeddedTemplatesTest {
   }
 
   @Test
-  @DisplayName("Get the templates of a single embedded resource from an embedded array")
+  @DisplayName("Get a single embedded resource from an embedded array")
   void test4() throws Exception {
 
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-templates-test:get"}},
+          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
           "_embedded": {
             "content": [
               {
-                "_links": {"self": {"href": "http://localhost/embedded-templates-test:item"}}
+                "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}}
               }
             ]
           }
         }
         """;
 
-    Templates templates =
+    HalMockMvc.TraversalBuilder traversal =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
-            .follow()
-            .templates();
+            .follow();
 
-    assertThatThrownBy(() -> templates.embedded("content"))
+    assertThatThrownBy(() -> traversal.embedded("content"))
         .isInstanceOf(AssertionError.class)
         .hasMessage("Embedded relation <content> is <ARRAY> instead of <OBJECT>");
   }
 
   @Test
-  @DisplayName("List the templates of an embedded array from a single embedded resource")
+  @DisplayName("List the resources of an embedded array from a single embedded resource")
   void test5() throws Exception {
 
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-templates-test:get"}},
+          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
           "_embedded": {
             "owner": {
-              "_links": {"self": {"href": "http://localhost/embedded-templates-test:item"}}
+              "_links": {"self": {"href": "http://localhost/embedded-resource-test:item"}}
             }
           }
         }
         """;
 
-    Templates templates =
+    HalMockMvc.TraversalBuilder traversal =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
-            .follow()
-            .templates();
+            .follow();
 
-    assertThatThrownBy(() -> templates.embeddedList("owner"))
+    assertThatThrownBy(() -> traversal.embeddedList("owner"))
         .isInstanceOf(AssertionError.class)
         .hasMessage("Embedded relation <owner> is <OBJECT> instead of <ARRAY>");
   }
 
   @Test
-  @DisplayName("Get the templates of a missing embedded relation")
+  @DisplayName("Get a resource from a missing embedded relation")
   void test6() throws Exception {
 
     myController.getResponseToSend =
         """
         {
-          "_links": {"self": {"href": "http://localhost/embedded-templates-test:get"}}
+          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}}
         }
         """;
 
-    Templates templates =
+    HalMockMvc.TraversalBuilder traversal =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow();
+
+    assertThatThrownBy(() -> traversal.embedded("owner"))
+        .isInstanceOf(NoSuchElementException.class)
+        .hasMessage("No embedded resource found for relation <owner>");
+  }
+
+  @Test
+  @DisplayName("Get the self href of an embedded resource without self link")
+  void test7() throws Exception {
+
+    myController.getResponseToSend =
+        """
+        {
+          "_links": {"self": {"href": "http://localhost/embedded-resource-test:get"}},
+          "_embedded": {"owner": {"name": "John"}}
+        }
+        """;
+
+    EmbeddedResource embeddedResource =
         HalMockMvc.builder(mockMvc)
             .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
             .build()
             .follow()
-            .templates();
+            .embedded("owner");
 
-    assertThatThrownBy(() -> templates.embedded("owner"))
+    assertThatThrownBy(embeddedResource::selfHref)
         .isInstanceOf(NoSuchElementException.class)
-        .hasMessage("No embedded resource found for relation <owner>");
+        .hasMessage("_links.self.href is missing from the embedded resource");
   }
 
   @Controller
@@ -228,12 +249,12 @@ class EmbeddedTemplatesTest {
       itemPutCount = 0;
     }
 
-    @GetMapping(value = "embedded-templates-test:get", produces = MediaTypes.HAL_FORMS_JSON_VALUE)
+    @GetMapping(value = "embedded-resource-test:get", produces = MediaTypes.HAL_FORMS_JSON_VALUE)
     public ResponseEntity<?> get() {
       return ResponseEntity.ok(getResponseToSend);
     }
 
-    @PutMapping("embedded-templates-test:item")
+    @PutMapping("embedded-resource-test:item")
     public ResponseEntity<?> putItem() {
       itemPutCount++;
       return ResponseEntity.noContent().build();

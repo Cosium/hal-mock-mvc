@@ -148,16 +148,21 @@ halMockMvc
 Reach the templates of embedded resources, a single one (`_embedded.owner`) or an array (`_embedded.content`):
 
 ```java
-Templates templates = halMockMvc.follow().templates();
+halMockMvc
+    .follow()
+    .embedded("owner")
+    .templates()
+    .byKey("update")
+    .assertThat(hasMethod("PUT"));
 
-templates.embedded("owner").byKey("update").assertThat(hasMethod("PUT"));
-
-templates
+halMockMvc
+    .follow()
     .embeddedList("content")
     .stream()
     .filter(item -> item.selfHref().equals(itemHref))
     .findFirst()
     .orElseThrow()
+    .templates()
     .byKey("delete")
     .assertThat(hasMethod("DELETE"));
 ```
