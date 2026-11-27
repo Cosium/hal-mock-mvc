@@ -1,13 +1,17 @@
 package com.cosium.hal_mock_mvc;
 
 import static com.cosium.hal_mock_mvc.HalCompatibleContentTypeMatcher.contentTypeIsCompatibleWithHal;
+import static com.cosium.hal_mock_mvc.OrMatcher.anyOf;
 import static java.util.Objects.requireNonNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.client.LinkDiscoverer;
 import org.springframework.hateoas.mediatype.hal.forms.HalFormsLinkDiscoverer;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * <h3>HAL links browsing</h3>
@@ -36,6 +41,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
  * HalMockMvc.builder(mockMvc).baseUri(linkTo(methodOn(MyController.class).list()).toUri())
  * .build()
  * .follow()
+ * .fetchResource()
  * .templates()
  * .byKey("create")
  * .submit(
@@ -140,9 +146,26 @@ public class HalMockMvc {
 
     /**
      * @return The HAL-FORMS templates provided by the final endpoint.
+     * @deprecated Use {@link #fetchResource()} then {@link HalFormsResource#templates()}, which
+     *     also gives access to the embedded resources from the same response.
      */
+    @Deprecated
     public Templates templates() throws Exception {
-      return new Templates(requestExecutor, get());
+      return fetchResource().templates();
+    }
+
+    /**
+     * @return The HAL-FORMS resource provided by the final endpoint.
+     */
+    public HalFormsResource fetchResource() throws Exception {
+      ResultActions resultActions =
+          get()
+              .andExpect(anyOf(status().is2xxSuccessful(), status().is3xxRedirection()))
+              .andExpect(content().contentType(MediaTypes.HAL_FORMS_JSON));
+      return new HalFormsResource(
+          requestExecutor,
+          JsonMapper.shared()
+              .readTree(resultActions.andReturn().getResponse().getContentAsString()));
     }
 
     /**

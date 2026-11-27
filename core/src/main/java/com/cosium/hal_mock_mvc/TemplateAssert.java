@@ -20,4 +20,9 @@ public class TemplateAssert {
     assertEquals("Template title", expected, template.title().orElse(null));
     return this;
   }
+
+  public TemplateAssert hasMethod(String expected) {
+    assertEquals("Template method", expected, template.method());
+    return this;
+  }
 }

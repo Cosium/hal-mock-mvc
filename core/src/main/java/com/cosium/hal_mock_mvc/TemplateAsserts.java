@@ -13,4 +13,8 @@ public class TemplateAsserts {
   public static Consumer<TemplateAssert> hasTitle(@Nullable String expected) {
     return templateAssert -> templateAssert.hasTitle(expected);
   }
+
+  public static Consumer<TemplateAssert> hasMethod(String expected) {
+    return templateAssert -> templateAssert.hasMethod(expected);
+  }
 }

@@ -105,6 +105,7 @@ Discover a template by key and submit it with raw JSON:
 ```java
 halMockMvc
     .follow()
+    .fetchResource()
     .templates()
     .byKey("create")
     .submit("{\"name\":\"john\"}")
@@ -116,6 +117,7 @@ Submit a template with no body (e.g. DELETE affordance):
 ```java
 halMockMvc
     .follow()
+    .fetchResource()
     .templates()
     .byKey("deleteByName")
     .submit()
@@ -127,11 +129,44 @@ List all available templates:
 ```java
 Collection<Template> templates = halMockMvc
     .follow()
+    .fetchResource()
     .templates()
     .list();
 
 // Each Template exposes key() and representation()
 // TemplateRepresentation exposes method(), contentType(), and target()
+```
+
+Assert on a template:
+
+```java
+halMockMvc
+    .follow()
+    .fetchResource()
+    .templates()
+    .byKey("create")
+    .assertThat(hasMethod("POST"), hasTitle("Create"))
+    .assertThatProperty("name", hasRequired(true));
+```
+
+Fetch a resource once with `fetchResource()`, then reach its templates and those of its embedded resources, a single one (`_embedded.owner`) or an array (`_embedded.content`):
+
+```java
+HalFormsResource resource = halMockMvc.follow().fetchResource();
+
+resource.templates().byKey("create").assertThat(hasMethod("POST"));
+
+resource.embedded("owner").templates().byKey("update").assertThat(hasMethod("PUT"));
+
+resource
+    .embeddedList("content")
+    .stream()
+    .filter(item -> item.selfHref().equals(itemHref))
+    .findFirst()
+    .orElseThrow()
+    .templates()
+    .byKey("delete")
+    .assertThat(hasMethod("DELETE"));
 ```
 
 ## Form builder
@@ -141,6 +176,7 @@ Use `createForm()` on a template for typed, validated form population:
 ```java
 halMockMvc
     .follow()
+    .fetchResource()
     .templates()
     .byKey("create")
     .createForm()
@@ -161,6 +197,7 @@ Collection variants: `withStrings`, `withBooleans`, `withIntegers`, `withLongs`,
 ```java
 halMockMvc
     .follow()
+    .fetchResource()
     .templates()
     .byKey("create")
     .createAndShift("{\"name\":\"john\"}")
@@ -175,10 +212,12 @@ halMockMvc
 ```java
 halMockMvc
     .follow()
+    .fetchResource()
     .templates()
     .byKey("create")
     .createAndShift("{\"name\":\"john\"}")
     .follow()
+    .fetchResource()
     .templates()
     .byKey("changeCity")
     .submitAndExpect204NoContent("{\"city\":\"Casablanca\"}")
@@ -213,6 +252,7 @@ Use `multipart()` on a template:
 ```java
 halMockMvc
     .follow(Hop.relation("file").withParameter("id", "foo"))
+    .fetchResource()
     .templates()
     .byKey("uploadFile")
     .multipart()
@@ -226,6 +266,7 @@ Template-based multipart also supports `createAndShift()`:
 ```java
 halMockMvc
     .follow()
+    .fetchResource()
     .templates()
     .byKey("addFile")
     .multipart()

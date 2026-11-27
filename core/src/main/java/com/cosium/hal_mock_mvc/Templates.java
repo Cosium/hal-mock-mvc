@@ -1,9 +1,6 @@
 package com.cosium.hal_mock_mvc;
 
-import static com.cosium.hal_mock_mvc.OrMatcher.anyOf;
 import static java.util.Objects.requireNonNull;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,9 +10,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.test.web.servlet.ResultActions;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -28,21 +24,15 @@ public class Templates {
   private final ObjectMapper objectMapper;
   private final HalFormsBody body;
 
-  Templates(RequestExecutor requestExecutor, ResultActions resultActions) throws Exception {
+  Templates(RequestExecutor requestExecutor, JsonNode resource) {
     this.requestExecutor = requireNonNull(requestExecutor);
-
-    resultActions
-        .andExpect(anyOf(status().is2xxSuccessful(), status().is3xxRedirection()))
-        .andExpect(content().contentType(MediaTypes.HAL_FORMS_JSON));
 
     objectMapper =
         JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .addModule(new JacksonModule())
             .build();
-    body =
-        objectMapper.readValue(
-            resultActions.andReturn().getResponse().getContentAsString(), HalFormsBody.class);
+    body = objectMapper.treeToValue(resource, HalFormsBody.class);
   }
 
   public Optional<Template> byOptionalKey(String key) {
