@@ -134,6 +134,34 @@ Collection<Template> templates = halMockMvc
 // TemplateRepresentation exposes method(), contentType(), and target()
 ```
 
+Assert on a template:
+
+```java
+halMockMvc
+    .follow()
+    .templates()
+    .byKey("create")
+    .assertThat(hasMethod("POST"), hasTitle("Create"))
+    .assertThatProperty("name", hasRequired(true));
+```
+
+Reach the templates of embedded resources, a single one (`_embedded.owner`) or an array (`_embedded.content`):
+
+```java
+Templates templates = halMockMvc.follow().templates();
+
+templates.embedded("owner").byKey("update").assertThat(hasMethod("PUT"));
+
+templates
+    .embeddedList("content")
+    .stream()
+    .filter(item -> item.selfHref().equals(itemHref))
+    .findFirst()
+    .orElseThrow()
+    .byKey("delete")
+    .assertThat(hasMethod("DELETE"));
+```
+
 ## Form builder
 
 Use `createForm()` on a template for typed, validated form population:

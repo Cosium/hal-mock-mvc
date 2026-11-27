@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -16,8 +17,10 @@ import java.util.stream.Collectors;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.web.servlet.ResultActions;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.JsonNodeType;
 
 /**
  * @author Réda Housni Alaoui
@@ -45,6 +48,62 @@ public class Templates {
             resultActions.andReturn().getResponse().getContentAsString(), HalFormsBody.class);
   }
 
+  private Templates(RequestExecutor requestExecutor, ObjectMapper objectMapper, HalFormsBody body) {
+    this.requestExecutor = requireNonNull(requestExecutor);
+    this.objectMapper = requireNonNull(objectMapper);
+    this.body = requireNonNull(body);
+  }
+
+  /**
+   * @return The href of the resource's self link
+   */
+  public String selfHref() {
+    return body.baseUri;
+  }
+
+  /**
+   * @param relation The relation of a single resource embedded in this resource
+   * @return The HAL-FORMS templates provided by the embedded resource
+   */
+  public Templates embedded(String relation) {
+    JsonNode embeddedResource = findEmbedded(relation);
+    if (embeddedResource.isObject()) {
+      return buildEmbeddedTemplates(embeddedResource);
+    }
+    throw new AssertionError(
+        "Embedded relation <%s> is <%s> instead of <%s>"
+            .formatted(relation, embeddedResource.getNodeType(), JsonNodeType.OBJECT));
+  }
+
+  /**
+   * @param relation The relation of an array of resources embedded in this resource
+   * @return The HAL-FORMS templates provided by each embedded resource, in the array order
+   */
+  public List<Templates> embeddedList(String relation) {
+    JsonNode embeddedResources = findEmbedded(relation);
+    if (embeddedResources.isArray()) {
+      return embeddedResources.valueStream().map(this::buildEmbeddedTemplates).toList();
+    }
+    throw new AssertionError(
+        "Embedded relation <%s> is <%s> instead of <%s>"
+            .formatted(relation, embeddedResources.getNodeType(), JsonNodeType.ARRAY));
+  }
+
+  private JsonNode findEmbedded(String relation) {
+    return Optional.ofNullable(body.embeddedByRelation.get(relation))
+        .orElseThrow(
+            () ->
+                new NoSuchElementException(
+                    "No embedded resource found for relation <%s>".formatted(relation)));
+  }
+
+  private Templates buildEmbeddedTemplates(JsonNode embeddedResource) {
+    return new Templates(
+        requestExecutor,
+        objectMapper,
+        objectMapper.treeToValue(embeddedResource, HalFormsBody.class));
+  }
+
   public Optional<Template> byOptionalKey(String key) {
     return Optional.ofNullable(body.templateByKey.get(key))
         .map(
@@ -70,11 +129,13 @@ public class Templates {
 
     private final String baseUri;
     private final Map<String, TemplateRepresentation> templateByKey;
+    private final Map<String, JsonNode> embeddedByRelation;
 
     @JsonCreator
     public HalFormsBody(
         @JsonProperty("_links") Map<String, Link> linkByName,
-        @JsonProperty("_templates") Map<String, TemplateRepresentation> templateByKey) {
+        @JsonProperty("_templates") Map<String, TemplateRepresentation> templateByKey,
+        @JsonProperty("_embedded") Map<String, JsonNode> embeddedByRelation) {
       baseUri =
           Optional.ofNullable(linkByName)
               .map(linkByNameMap -> linkByNameMap.get("self"))
@@ -86,6 +147,11 @@ public class Templates {
 
       this.templateByKey =
           Optional.ofNullable(templateByKey)
+              .map(Collections::unmodifiableMap)
+              .orElseGet(Collections::emptyMap);
+
+      this.embeddedByRelation =
+          Optional.ofNullable(embeddedByRelation)
               .map(Collections::unmodifiableMap)
               .orElseGet(Collections::emptyMap);
     }

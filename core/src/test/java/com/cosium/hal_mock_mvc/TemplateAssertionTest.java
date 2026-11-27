@@ -1,5 +1,6 @@
 package com.cosium.hal_mock_mvc;
 
+import static com.cosium.hal_mock_mvc.TemplateAsserts.hasMethod;
 import static com.cosium.hal_mock_mvc.TemplateAsserts.hasTitle;
 import static com.cosium.hal_mock_mvc.TemplatePropertyAsserts.exists;
 import static com.cosium.hal_mock_mvc.TemplatePropertyAsserts.hasMax;
@@ -681,6 +682,42 @@ class TemplateAssertionTest {
     assertThatCode(() -> template.assertThatProperty("bar", it -> it.exists(true)))
         .isInstanceOf(AssertionError.class)
         .hasMessage("Property exists expected:<true> but was:<false>");
+  }
+
+  @Test
+  @DisplayName("Assert on template method")
+  void test16() throws Exception {
+
+    myController.getResponseToSend =
+        JSON.std
+            .composeString()
+            .startObject()
+            .startObjectProperty("_links")
+            .startObjectProperty("self")
+            .put("href", "http://localhost/template-assertion-test:put")
+            .end()
+            .end()
+            .startObjectProperty("_templates")
+            .startObjectProperty("create")
+            .put("method", "PUT")
+            .end()
+            .end()
+            .end()
+            .finish();
+
+    Template template =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).get()).toUri())
+            .build()
+            .follow()
+            .templates()
+            .byKey("create");
+
+    assertThatCode(() -> template.assertThat(hasMethod("PUT"))).doesNotThrowAnyException();
+
+    assertThatCode(() -> template.assertThat(it -> it.hasMethod("POST")))
+        .isInstanceOf(AssertionError.class)
+        .hasMessage("Template method expected:<POST> but was:<PUT>");
   }
 
   @Controller
