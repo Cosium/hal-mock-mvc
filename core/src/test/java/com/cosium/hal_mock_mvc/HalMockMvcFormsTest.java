@@ -2,6 +2,7 @@ package com.cosium.hal_mock_mvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.afford;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -247,6 +248,50 @@ class HalMockMvcFormsTest {
         .hasMessageContaining("Status expected:<204> but was:<201>");
   }
 
+  @Test
+  @DisplayName("Templates are read from a redirection response that is not followed")
+  void test11() throws Exception {
+    String json = JSON.std.composeString().startObject().put("name", "john").end().finish();
+
+    HalMockMvc.builder(mockMvc)
+        .baseUri(linkTo(methodOn(MyController.class).listWithoutLocation()).toUri())
+        .build()
+        .follow()
+        .templates()
+        .byKey("create")
+        .submit(json)
+        .andExpect(status().isCreated());
+
+    assertThat(myController.personByName).containsKey("john");
+  }
+
+  @Test
+  @DisplayName("Templates are refused on an error response")
+  void test12() {
+    HalMockMvc.TraversalBuilder traversalBuilder =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(
+                linkTo(methodOn(MyController.class).findByName(UUID.randomUUID().toString()))
+                    .toUri())
+            .build()
+            .follow();
+
+    Throwable thrown = catchThrowable(traversalBuilder::templates);
+
+    assertThat(thrown)
+        .isInstanceOf(AssertionError.class)
+        .hasMessage(
+            """
+            None of the matchers matched:
+            - Range for response status value 404 expected:<SUCCESSFUL> but was:<CLIENT_ERROR>
+            - Range for response status value 404 expected:<REDIRECTION> but was:<CLIENT_ERROR>""");
+    assertThat(thrown.getSuppressed())
+        .extracting(Throwable::getMessage)
+        .containsExactly(
+            "Range for response status value 404 expected:<SUCCESSFUL> but was:<CLIENT_ERROR>",
+            "Range for response status value 404 expected:<REDIRECTION> but was:<CLIENT_ERROR>");
+  }
+
   @Controller
   @RequestMapping("/HalMockMvcFormsTest")
   public static class MyController {
@@ -284,6 +329,18 @@ class HalMockMvcFormsTest {
       return ResponseEntity.ok(
           CollectionModel.of(
               resources, link, linkTo(methodOn(MyController.class).getFile(null)).withRel("file")));
+    }
+
+    @GetMapping("/without-location")
+    public ResponseEntity<?> listWithoutLocation() {
+      Link link =
+          linkTo(methodOn(MyController.class).listWithoutLocation())
+              .withSelfRel()
+              .andAffordance(VoidAffordance.create())
+              .andAffordance(afford(methodOn(MyController.class).create(null)));
+
+      return ResponseEntity.status(HttpStatus.MULTIPLE_CHOICES)
+          .body(new RepresentationModel<>(link));
     }
 
     @PostMapping
