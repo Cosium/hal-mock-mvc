@@ -8,6 +8,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import org.junit.jupiter.api.BeforeEach;
@@ -298,6 +300,38 @@ class HalFormsResourceTest {
     templates.byKey("create").assertThat(hasMethod("POST"));
   }
 
+  @Test
+  @DisplayName("Fetch a final endpoint answering an error status")
+  void test10() throws Exception {
+
+    HalMockMvc.TraversalBuilder traversal =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).getMissing()).toUri())
+            .build()
+            .follow();
+
+    assertThatThrownBy(traversal::fetchResource)
+        .isInstanceOf(AssertionError.class)
+        .hasMessage(
+            "Range for response status value 404 expected:<SUCCESSFUL> but was:<CLIENT_ERROR>");
+  }
+
+  @Test
+  @DisplayName("Fetch a final endpoint answering HAL instead of HAL-FORMS")
+  void test11() throws Exception {
+
+    HalMockMvc.TraversalBuilder traversal =
+        HalMockMvc.builder(mockMvc)
+            .baseUri(linkTo(methodOn(MyController.class).getHal(null)).toUri())
+            .build()
+            .follow();
+
+    assertThatThrownBy(traversal::fetchResource)
+        .isInstanceOf(AssertionError.class)
+        .hasMessage(
+            "Content type expected:<application/prs.hal-forms+json> but was:<application/hal+json>");
+  }
+
   @Controller
   public static class MyController {
 
@@ -315,6 +349,23 @@ class HalFormsResourceTest {
     public ResponseEntity<?> get() {
       getCount++;
       return ResponseEntity.ok(getResponseToSend);
+    }
+
+    @GetMapping("hal-forms-resource-test:missing")
+    public ResponseEntity<?> getMissing() {
+      return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("hal-forms-resource-test:hal")
+    public ResponseEntity<?> getHal(HttpServletResponse response) throws IOException {
+      response.setContentType(MediaTypes.HAL_JSON_VALUE);
+      response
+          .getWriter()
+          .write(
+              """
+              {"_links": {"self": {"href": "http://localhost/hal-forms-resource-test:hal"}}}
+              """);
+      return null;
     }
 
     @PutMapping("hal-forms-resource-test:item")
